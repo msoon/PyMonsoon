@@ -110,6 +110,19 @@ class Monsoon(object):
     def stopSampling(self):
         Protocol.stopSampling()
 
+    def fillAllStatusPacket(self):
+        self.statusPacket.firmwareVersion = Protocol.getValue(op.OpCodes.FirmwareVersion,2)
+        self.statusPacket.protocolVersion = Protocol.getValue(op.OpCodes.ProtocolVersion,2);
+        self.statusPacket.temperature = -1;
+        self.statusPacket.serialNumber = Protocol.getValue(op.OpCodes.getSerialNumber,2);
+        self.statusPacket.powerupCurrentLimit = -1;
+        self.statusPacket.runtimeCurrentLimit = -1;
+        self.statusPacket.powerupTime = -1;
+        self.statusPacket.temperatureLimit = -1;
+        self.statusPacket.usbPassthroughMode = -1;
+        self.statusPacket.hardwareModel = Protocol.getValue(op.OpCodes.HardwareModel,2);
+        self.fillStatusPacket();
+
     def fillStatusPacket(self):
         self.statusPacket.mainFineScale = float(Protocol.getValue(op.OpCodes.setMainFineScale,2))
         self.statusPacket.mainCoarseScale = float(Protocol.getValue(op.OpCodes.setMainCoarseScale,2)) 
