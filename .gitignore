@@ -1,0 +1,11 @@
+#Test Scripts
+*.bat
+*.csv
+
+#Temporary build files
+/build
+
+#Visual Studio user files
+*.suo
+/Monsoon/.vs
+/examples/.vs
