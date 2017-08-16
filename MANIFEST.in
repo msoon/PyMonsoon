@@ -1,0 +1,21 @@
+#documentation
+include docs/Linux/reflashInstructions.txt
+include docs/Windows/driverInstall.docx
+include docs/Windows/reflash.docx
+include docs/API.pdf
+
+#Firmware & Drivers
+include Firmware/Firmware.zip
+include docs/Drivers/HVPM/powermonitor.cat
+include docs/Drivers/HVPM/PowerMonitor.inf
+include docs/Drivers/HVPM/WdfCoinstaller01011.dll
+include docs/Drivers/HVPM/winusbcoinstaller2.dl
+#Examples:
+
+include examples/LVPM_RevE_Prot_1_Ver25_beta.fwm
+include examples/ReflashExample.py
+include examples/SimpleSamplingExample.py
+
+#Misc
+include LICENSE.txt
+

@@ -4,6 +4,9 @@
 
 #Temporary build files
 /build
+/monsoon.egg-info
+*.pyc
+
 
 #Visual Studio user files
 *.suo
