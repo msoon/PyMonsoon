@@ -5,9 +5,9 @@ PyPi Project: https://pypi.python.org/pypi/monsoon/
 
 Install using 'pip install Monsoon'
 
-=======================================
-Usage Notes
-=======================================
+
+# Usage Notes
+
 This project is currently in an Alpha state.  Users are encouraged to report bugs, features requests, or other recommendations for improvement.
 
 Legacy Hardware (Part number FTA22D, The white box) will require a firmware update before using this Library.  Example code for accomplishing this is available in /examples/ReflashExample.py.  The firmware update will render the unit incompatible with the Windows 4.X series software, and require a driver update in Windows.  
