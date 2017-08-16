@@ -1,0 +1,19 @@
+1. On the front panel of the Power Monitor is a small button.  The text below it reads "Output enabled."  Hold this button in and push the power button.  Device should power on, and the LED beside the power button should be amber.
+
+2. Select the new firmware file based on your requirements.  Most units already have PM_RevD_Prot17_Ver20.hex flashed at the factory, and will be upgrading to LVPM_RevE_Prot1_Ver21_Beta.fwm
+
+3. Create a Python script to use the reflash class.  An example is provided in reflashMain.py:
+
+Mon = reflash.bootloaderMonsoon()
+Mon.setup_usb()
+Header, Hex = Mon.getHeaderFromFWM('LVPM_RevE_Prot1_Ver21.fwm')
+if(Mon.verifyHeader(Header)):
+    Mon.writeFlash(Hex)
+
+4. Note that .fwm files have a header indicating the hardware compatibility for each firmware file.  Previous releases use .hex format, so rolling back to older firmware will skip the verification step:
+
+Mon = reflash.bootloaderMonsoon()
+Mon.setup_usb()
+Hex = Mon.getHexFile('PM_RevD_Prot17_Ver20.hex')
+Mon.writeFlash(Hex)
+
