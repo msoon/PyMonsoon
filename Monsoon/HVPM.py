@@ -98,7 +98,7 @@ class Monsoon(object):
         Protocol.sendCommand(op.OpCodes.setVoltageChannel,value)
 
     def getSerialNumber(self):
-        serialNumber = Protocol.getValue(op.OpCodes.SetSerialNumber,2)
+        serialNumber = Protocol.getValue(op.OpCodes.getSerialNumber,2)
         return serialNumber
 
     def getVoltageChannel(self):
