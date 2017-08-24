@@ -3,7 +3,7 @@ import platform
 import time
 import socket
 import re
-
+import math
 import base64
 
 import usb.core
@@ -97,6 +97,11 @@ class Monsoon(object):
     def setVoltageChannel(self, VoltageChannelCode):
         Protocol.sendCommand(op.OpCodes.setVoltageChannel,value)
 
+    def setTemperatureLimit(self,value):
+        """Sets the fan turn-on temperature limit.  Only valid in HVPM."""
+        raw = self.raw_from_degrees(value)
+        Protocol.sendCommand(op.OpCodes.setTemperatureLimit,raw)
+
     def getSerialNumber(self):
         """Get the device serial number"""
         serialNumber = Protocol.getValue(op.OpCodes.getSerialNumber,2)
@@ -111,20 +116,36 @@ class Monsoon(object):
     def stopSampling(self):
         Protocol.stopSampling()
 
-    def fillAllStatusPacket(self):
-        self.statusPacket.firmwareVersion = Protocol.getValue(op.OpCodes.FirmwareVersion,2)
-        self.statusPacket.protocolVersion = Protocol.getValue(op.OpCodes.ProtocolVersion,2);
-        self.statusPacket.temperature = -1;
-        self.statusPacket.serialNumber = Protocol.getValue(op.OpCodes.getSerialNumber,2);
-        self.statusPacket.powerupCurrentLimit = -1;
-        self.statusPacket.runtimeCurrentLimit = -1;
-        self.statusPacket.powerupTime = -1;
-        self.statusPacket.temperatureLimit = -1;
-        self.statusPacket.usbPassthroughMode = -1;
-        self.statusPacket.hardwareModel = Protocol.getValue(op.OpCodes.HardwareModel,2);
-        self.fillStatusPacket();
+    def raw_from_degrees(self, value):
+        """For setting the fan temperature limit.  Only valid in HVPM."""
+        lowbyte = int(math.floor(value))
+        highbyte = int(min(0xFF,(value-lowbyte) * 2**8)) #Conversion into Q7.8 format
+        raw = struct.unpack("H",struct.pack("BB",highbyte,lowbyte))[0]
+        return raw
+        
+
+    def degrees_from_raw(self, value):
+        """For setting the fan temperature limit.  Only valid in HVPM"""
+        value = int(value)
+        bytes = struct.unpack("BB",struct.pack("H",value)) #Firmware swizzles these bytes.
+        result = bytes[1] + (bytes[0] * 2**-8)
+        return result
 
     def fillStatusPacket(self):
+
+        #Misc Status information.
+        self.statusPacket.firmwareVersion = Protocol.getValue(op.OpCodes.FirmwareVersion,2)
+        self.statusPacket.protocolVersion = Protocol.getValue(op.OpCodes.ProtocolVersion,2)
+        self.statusPacket.temperature = -1 #Not currently supported.
+        self.statusPacket.serialNumber = Protocol.getValue(op.OpCodes.getSerialNumber,2)
+        self.statusPacket.powerupCurrentLimit = self.amps_from_raw(Protocol.getValue(op.OpCodes.SetPowerUpCurrentLimit,2))
+        self.statusPacket.runtimeCurrentLimit = self.amps_from_raw(Protocol.getValue(op.OpCodes.SetRunCurrentLimit,2))
+        self.statusPacket.powerupTime = Protocol.getValue(self.setPowerupTime,1)
+        self.statusPacket.temperatureLimit = self.degrees_from_raw(Protocol.getValue(op.OpCodes.setTemperatureLimit,2))
+        self.statusPacket.usbPassthroughMode = Protocol.getValue(op.OpCodes.setUsbPassthroughMode,1)
+        self.statusPacket.hardwareModel = Protocol.getValue(op.OpCodes.HardwareModel,2)
+
+        #Calibration data
         self.statusPacket.mainFineScale = float(Protocol.getValue(op.OpCodes.setMainFineScale,2))
         self.statusPacket.mainCoarseScale = float(Protocol.getValue(op.OpCodes.setMainCoarseScale,2)) 
         self.statusPacket.usbFineScale = float(Protocol.getValue(op.OpCodes.setUSBFineScale,2)) 
@@ -137,7 +158,6 @@ class Monsoon(object):
         self.statusPacket.usbFineZeroOffset = float(Protocol.getValue(op.OpCodes.SetUSBFineZeroOffset,2))
         self.statusPacket.usbCoarseZeroOffset = float(Protocol.getValue(op.OpCodes.SetUSBCoarseZeroOffset,2))
 
-        #ctrl_transfer(bmRequestType, bmRequest, wValue, wIndex)
 
     def BulkRead(self):
         return(DEVICE.read(0x81,64,timeout=0))
