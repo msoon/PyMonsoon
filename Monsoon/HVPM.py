@@ -78,7 +78,7 @@ class Monsoon(object):
         return result
 
     def raw_from_amps(self,value):
-        result = 65535 - 0x0F00 * (value / 65535) + 0x0F00
+        result = ((65535-0x0F00) * (value / 15.625)+0x0F00)
         return result
 
     def setVout(self,value):
@@ -98,6 +98,7 @@ class Monsoon(object):
         Protocol.sendCommand(op.OpCodes.setVoltageChannel,value)
 
     def getSerialNumber(self):
+        """Get the device serial number"""
         serialNumber = Protocol.getValue(op.OpCodes.getSerialNumber,2)
         return serialNumber
 
