@@ -120,8 +120,3 @@ class SampleType(object):
     invalid = 0x20
     refCal = 0x30
 
-class USBPassthroughModes:
-    """Valid values for USB Passthrough"""
-    Off = 0
-    On = 1
-    Auto = 2
