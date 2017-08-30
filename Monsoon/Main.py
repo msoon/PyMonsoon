@@ -1,13 +1,18 @@
 import LVPM
 import sampleEngine
 import Operations as op
+import HVPM
+
 
 Mon = LVPM.Monsoon()
 Mon.setup_usb()
 
+Mon.fillStatusPacket()
 
 Mon.setVout(4.0)
 engine = sampleEngine.SampleEngine(Mon)
+print("Serial number: " + repr(Mon.getSerialNumber()))
+
 engine.enableCSVOutput("Main Example.csv")
 engine.ConsoleOutput(True)
 numSamples=sampleEngine.triggers.SAMPLECOUNT_INFINITE #Don't stop based on sample count, continue until the trigger conditions have been satisfied.

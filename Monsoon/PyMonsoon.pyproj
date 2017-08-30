@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>03a4b685-fb72-4cde-b898-54e5b8867f17</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>reflashMain.py</StartupFile>
+    <StartupFile>Main.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -42,7 +42,6 @@
     <Compile Include="reflash.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="reflashMain.py" />
     <Compile Include="sampleEngine.py">
       <SubType>Code</SubType>
     </Compile>

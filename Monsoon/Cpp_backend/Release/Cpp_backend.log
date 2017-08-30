@@ -1,0 +1,33 @@
+﻿cl : Command line warning D9002: ignoring unknown option '--gcc'
+  stdafx.cpp
+C:\PyMonsoon\Monsoon\Cpp_backend\libusb-1.0.9\libusb\libusb.h(939): warning C4200: nonstandard extension used: zero-sized array in struct/union
+  C:\PyMonsoon\Monsoon\Cpp_backend\libusb-1.0.9\libusb\libusb.h(939): note: This member will be ignored by a defaulted constructor or copy/move assignment operator
+c:\pymonsoon\monsoon\cpp_backend\stdafx.h(79): warning C4305: 'initializing': truncation from 'double' to 'float'
+c:\pymonsoon\monsoon\cpp_backend\stdafx.h(81): warning C4305: 'initializing': truncation from 'double' to 'float'
+c:\pymonsoon\monsoon\cpp_backend\stdafx.h(82): warning C4305: 'initializing': truncation from 'double' to 'float'
+c:\pymonsoon\monsoon\cpp_backend\stdafx.h(83): warning C4305: 'initializing': truncation from 'double' to 'float'
+cl : Command line warning D9002: ignoring unknown option '--gcc'
+  LVPM.cpp
+c:\pymonsoon\monsoon\cpp_backend\stdafx.h(79): warning C4305: 'initializing': truncation from 'double' to 'float'
+c:\pymonsoon\monsoon\cpp_backend\stdafx.h(81): warning C4305: 'initializing': truncation from 'double' to 'float'
+c:\pymonsoon\monsoon\cpp_backend\stdafx.h(82): warning C4305: 'initializing': truncation from 'double' to 'float'
+c:\pymonsoon\monsoon\cpp_backend\stdafx.h(83): warning C4305: 'initializing': truncation from 'double' to 'float'
+LVPM.cpp(28): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+LVPM.cpp(60): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+LVPM.cpp(61): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+LVPM.cpp(63): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+LVPM.cpp(64): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+LVPM.cpp(123): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
+LVPM.cpp(124): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
+LVPM.cpp(158): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+LVPM.cpp(159): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+LVPM.cpp(166): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+LVPM.cpp(167): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+LVPM.cpp(175): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+  run.cpp
+run.cpp(8): warning C4305: 'argument': truncation from 'double' to 'float'
+  pmapi.cpp
+  Generating code
+  All 404 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  Finished generating code
+  Cpp_backend.vcxproj -> C:\PyMonsoon\Monsoon\Cpp_backend\Release\Cpp_backend.exe
