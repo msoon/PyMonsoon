@@ -1,24 +1,50 @@
 import LVPM
+import HVPM
 import sampleEngine
 import Operations as op
 import HVPM
 
+HVMON = HVPM.Monsoon()
+HVMON.setup_usb()
 
+
+print("HVPM Serial Number: " + repr(HVMON.getSerialNumber()))
 Mon = LVPM.Monsoon()
 Mon.setup_usb()
+print("LVPM Serial number: " + repr(Mon.getSerialNumber()))
 
 Mon.fillStatusPacket()
-
-Mon.setVout(4.0)
+HVMON.fillStatusPacket()
+Mon.setVout(4.5)
+HVMON.setVout(3)
 engine = sampleEngine.SampleEngine(Mon)
-print("Serial number: " + repr(Mon.getSerialNumber()))
+
+HVengine = sampleEngine.SampleEngine(HVMON)
+
+
+
+HVengine.enableCSVOutput("HV Main Example.csv")
+HVengine.ConsoleOutput(True)
 
 engine.enableCSVOutput("Main Example.csv")
 engine.ConsoleOutput(True)
+
+
+
+#Test the HVPM
 numSamples=sampleEngine.triggers.SAMPLECOUNT_INFINITE #Don't stop based on sample count, continue until the trigger conditions have been satisfied.
-engine.setStartTrigger(sampleEngine.triggers.GREATER_THAN,100) #Start when we exceed 100 mA
-engine.setStopTrigger(sampleEngine.triggers.LESS_THAN,10) #Stop when we drop below 10 mA.
-engine.setTriggerChannel(sampleEngine.channels.MainCurrent) #Start and stop judged by the main channel.
+HVengine.setStartTrigger(sampleEngine.triggers.GREATER_THAN,0) #Start when we exceed 0 s
+HVengine.setStopTrigger(sampleEngine.triggers.GREATER_THAN,5) #Stop when we exceed 5 s.
+HVengine.setTriggerChannel(sampleEngine.channels.timeStamp) #Start and stop judged by the timestamp channel.
+HVengine.startSampling(numSamples)
+
+print("\nEnding HVPM, begin LVPM\n")
+
+#Test the LVPM
+numSamples=sampleEngine.triggers.SAMPLECOUNT_INFINITE #Don't stop based on sample count, continue until the trigger conditions have been satisfied.
+engine.setStartTrigger(sampleEngine.triggers.GREATER_THAN,0) #Start when we exceed 0 s
+engine.setStopTrigger(sampleEngine.triggers.GREATER_THAN,5) #Stop when we exceed 5 s.
+engine.setTriggerChannel(sampleEngine.channels.timeStamp) #Start and stop judged by the timestamp channel.
 engine.startSampling(numSamples)
 
 

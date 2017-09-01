@@ -31,6 +31,11 @@ class OpCodes:
     HardwareModel = 0x45 #0 = unknown, 1 = LV, 2 = HV
     Stop = 0xFF
 
+class HardwareModel:
+    """Hardware Model Types"""
+    UNKNOWN = 0
+    LVPM = 1
+    HVPM = 2
 class Control_Codes:
     """USB Protocol codes."""
     USB_IN_PACKET = 0xC0

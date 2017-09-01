@@ -14,14 +14,16 @@ import time
 import numpy as np
 import pmapi
 
-DEVICE = None
-DEVICE_TYPE = None
-epBulkWriter = None
-epBulkReader = None
-Protocol = None
+
 
 class Monsoon(object):
+
     def __init__(self, *args, **kwargs):
+        self.DEVICE = None
+        self.DEVICE_TYPE = None
+        self.epBulkWriter = None
+        self.epBulkReader = None
+        self.Protocol = None
         self.statusPacket = op.statusPacket
         self.fineThreshold = 30000
         self.auxFineThreshold = 30000
@@ -33,42 +35,42 @@ class Monsoon(object):
         self.__padding = np.zeros(64)
         pass
 
-    def setup_usb(self):
-        global DEVICE 
-        global DEVICE_TYPE
-        global epBulkWriter
-        global epBulkReader
-        global Protocol
-        DEVICE = usb.core.find(idVendor=0x2AB9, idProduct=0x0001)
-        if DEVICE is None:
-            print("Error: could not find device")
-            pass
+    def setup_usb(self, serialno = -1):
+        Devices = usb.core.find(idVendor=0x2AB9, idProduct=0x0001,find_all=True);
+        for Dev in Devices:
+            self.Protocol = pmapi.USB_protocol(Dev)
+            if(self.Protocol.getValue(op.OpCodes.HardwareModel,2) == op.HardwareModel.LVPM):
+                if(self.getSerialNumber() == serialno or serialno == -1): #Either find the specific one, or connect to the first available device
+                    self.DEVICE = Dev
+                    break;
+        if(self.DEVICE == None):
+            print("Unable to find device")
 
         # On Linux we need to detach usb HID first
         if "Linux" == platform.system():
             try:
-                DEVICE.detach_kernel_driver(0)
+                self.DEVICE.detach_kernel_driver(0)
             except:
                 pass # already unregistered    
 
-        DEVICE.set_configuration()
-        cfg = DEVICE.get_active_configuration()
+        self.DEVICE.set_configuration()
+        cfg = self.DEVICE.get_active_configuration()
         intf = cfg[(0,0)]
 
-        epBulkWriter = usb.util.find_descriptor(
+        self.epBulkWriter = usb.util.find_descriptor(
             intf,
             custom_match = \
                 lambda e: \
                 usb.util.endpoint_direction(e.bEndpointAddress) == \
                 usb.util.ENDPOINT_OUT)
-        epBulkReader = usb.util.find_descriptor(
+        self.epBulkReader = usb.util.find_descriptor(
             intf,
             custom_match = \
                 lambda e: \
                 usb.util.endpoint_direction(e.bEndpointAddress) == \
                 usb.util.ENDPOINT_IN)
         
-        Protocol = pmapi.USB_protocol(DEVICE)
+        self.Protocol = pmapi.USB_protocol(self.DEVICE)
         
     
 
@@ -89,57 +91,57 @@ class Monsoon(object):
         """Set Vout.  Valid values from 2.01-4.55.  0 = turn off."""
         if(value > 2.00 and value < 4.56 or value == 0):
             vout = value * op.Conversion.FLOAT_TO_INT
-            Protocol.sendCommand(op.OpCodes.setMainVoltage,vout) 
+            self.Protocol.sendCommand(op.OpCodes.setMainVoltage,vout) 
         else:
             raise Exception("Invalid Voltage value")
 
     def setPowerupTime(self,value):
         """time in ms where powerupcurrentlimit applies, vs runtimecurrentlimit"""
-        Protocol.sendCommand(op.OpCodes.setPowerupTime,value)
+        self.Protocol.sendCommand(op.OpCodes.setPowerupTime,value)
 
     def setPowerUpCurrentLimit(self, value):
         """Sets power up current limit.  Valid values are 0-8 Amps"""
         value = self.__raw_from_amps(value)
-        Protocol.sendCommand(op.OpCodes.SetPowerUpCurrentLimit,value)
+        self.Protocol.sendCommand(op.OpCodes.SetPowerUpCurrentLimit,value)
 
     def setRunTimeCurrentLimit(self, value):
         """Sets runtime current limit.  Valid values are 0-8 amps."""
         value = self.__raw_from_amps(value)
-        Protocol.sendCommand(op.OpCodes.SetRunCurrentLimit,value)
+        self.Protocol.sendCommand(op.OpCodes.SetRunCurrentLimit,value)
 
     def setUSBCoarseZeroOffset(self,value):
         """Zero offset, not used in LVPM"""
-        Protocol.sendCommand(op.OpCodes.SetUSBCoarseZeroOffset,value)
+        self.Protocol.sendCommand(op.OpCodes.SetUSBCoarseZeroOffset,value)
 
     def setUSBPassthroughMode(self, USBPassthroughCode):
         """USB Passthrough mode.  0 = off, 1 = on, 2 = auto"""
-        Protocol.sendCommand(op.OpCodes.setUsbPassthroughMode,USBPassthroughCode)
+        self.Protocol.sendCommand(op.OpCodes.setUsbPassthroughMode,USBPassthroughCode)
 
     def setVoltageChannel(self, VoltageChannelCode):
         """Sets voltage measurement channel.  0 = Main & USB, 1 = Main & Aux"""
-        Protocol.sendCommand(op.OpCodes.setVoltageChannel,value)
+        self.Protocol.sendCommand(op.OpCodes.setVoltageChannel,value)
 
     def getVoltageChannel(self):
         """0 = Main & USB, 1 = Main & Aux"""
-        return(Protocol.getValue(op.OpCodes.setVoltageChannel,1))
+        return(self.Protocol.getValue(op.OpCodes.setVoltageChannel,1))
     def getSerialNumber(self):
         """Get the device serial number"""
-        serialNumber = Protocol.getValue(op.OpCodes.getSerialNumber,2)
+        serialNumber = self.Protocol.getValue(op.OpCodes.getSerialNumber,2)
         return serialNumber
 
     def fillStatusPacket(self):
         """Get all calibration information from the device EEPROM"""
-        self.statusPacket.mainFineResistorOffset = float(Protocol.getValue(op.OpCodes.setMainFineResistorOffset,1))
+        self.statusPacket.mainFineResistorOffset = float(self.Protocol.getValue(op.OpCodes.setMainFineResistorOffset,1))
         mainFineResistor = self.factoryRes + self.statusPacket.mainFineResistorOffset * 0.0001
-        self.statusPacket.mainCoarseResistorOffset = float(Protocol.getValue(op.OpCodes.setMainCoarseResistorOffset,1))
+        self.statusPacket.mainCoarseResistorOffset = float(self.Protocol.getValue(op.OpCodes.setMainCoarseResistorOffset,1))
         mainCoarseResistor = self.factoryRes + self.statusPacket.mainCoarseResistorOffset * 0.0001
-        self.statusPacket.usbFineResistorOffset = float(Protocol.getValue(op.OpCodes.setUsbFineResistorOffset,1))
+        self.statusPacket.usbFineResistorOffset = float(self.Protocol.getValue(op.OpCodes.setUsbFineResistorOffset,1))
         usbFineResistor = self.factoryRes + self.statusPacket.usbFineResistorOffset * 0.0001
-        self.statusPacket.usbCoarseResistorOffset = float(Protocol.getValue(op.OpCodes.setUsbCoarseResistorOffset,1))
+        self.statusPacket.usbCoarseResistorOffset = float(self.Protocol.getValue(op.OpCodes.setUsbCoarseResistorOffset,1))
         usbCoarseResistor = self.factoryRes + self.statusPacket.usbCoarseResistorOffset * 0.0001
-        self.statusPacket.auxFineResistorOffset = float(Protocol.getValue(op.OpCodes.setAuxFineResistorOffset,1))
+        self.statusPacket.auxFineResistorOffset = float(self.Protocol.getValue(op.OpCodes.setAuxFineResistorOffset,1))
         auxFineResistor = self.auxFactoryResistor + self.statusPacket.auxFineResistorOffset * 0.0001
-        self.statusPacket.auxCoarseResistorOffset = float(Protocol.getValue(op.OpCodes.setAuxCoarseResistorOffset,1))
+        self.statusPacket.auxCoarseResistorOffset = float(self.Protocol.getValue(op.OpCodes.setAuxCoarseResistorOffset,1))
         auxCoarseResistor = self.auxFactoryResistor + self.statusPacket.auxCoarseResistorOffset * 0.0001
 
         
@@ -157,14 +159,14 @@ class Monsoon(object):
 
     def StartSampling(self,calTime=1250,maxTime=0xFFFFFFFF):
         self.fillStatusPacket()
-        Protocol.startSampling(calTime,maxTime)
+        self.Protocol.startSampling(calTime,maxTime)
 
     def stopSampling(self):
-        Protocol.stopSampling()
+        self.Protocol.stopSampling()
         #ctrl_transfer(bmRequestType, bmRequest, wValue, wIndex)
     def BulkRead(self):
         """Read a sample packet"""
-        return(DEVICE.read(0x81,64,timeout=0))
+        return(self.DEVICE.read(0x81,64,timeout=0))
 
     def swizzlePacket(self, packet):
         """Byte order for 2-byte values is swapped for the majority of the measurement packet.  This fixes that."""
@@ -177,7 +179,7 @@ class Monsoon(object):
         swizzledPacket = np.array(swizzledPacket).astype('b')
         packetLength = len(swizzledPacket)
         rawBytes = struct.pack('b'*packetLength,*swizzledPacket)
-        measurements = struct.unpack("HBBhhhhhhhHBBhhhhhhhHBBhhhhhhhHBB",rawBytes)
+        measurements = struct.unpack("HBBhhhhhhHHBBhhhhhhhHBBhhhhhhhHBB",rawBytes)
         measurements = list(measurements)
         return measurements
 

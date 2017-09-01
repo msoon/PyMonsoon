@@ -18,14 +18,15 @@ import numpy as np
 
 import pmapi
 
-DEVICE = None
-DEVICE_TYPE = None
-epBulkWriter = None
-epBulkReader = None
 
-Protocol = None
 class Monsoon(object):
+
     def __init__(self, *args, **kwargs):
+        self.DEVICE = None
+        self.DEVICE_TYPE = None
+        self.epBulkWriter = None
+        self.epBulkReader = None
+        self.Protocol = None
         self.statusPacket = op.statusPacket
         self.fineThreshold = 64000
         self.auxFineThreshold = 30000
@@ -35,40 +36,48 @@ class Monsoon(object):
         self.padding = np.zeros(64)
         pass
 
-    def setup_usb(self):
-        global DEVICE 
-        global DEVICE_TYPE
-        global epBulkWriter
-        global epBulkReader
-        global Protocol
+    def setup_usb(self, serialno=-1):
+        self.DEVICE = None
+        self.DEVICE_TYPE
+        self.epBulkWriter
+        self.epBulkReader
+        self.Protocol
 
+        Devices = usb.core.find(idVendor=0x2AB9, idProduct=0x0001,find_all=True);
+        for Dev in Devices:
+            self.Protocol = pmapi.USB_protocol(Dev)
+            if(self.Protocol.getValue(op.OpCodes.HardwareModel,2) == op.HardwareModel.HVPM):
+                if(self.getSerialNumber() == serialno or serialno == -1):
+                    self.DEVICE = Dev
+                    break;
+        if(self.DEVICE == None):
+            print("Unable to find device")
 
-        DEVICE = usb.core.find(idVendor=0x2AB9, idProduct=0x0001)
         # On Linux we need to detach usb HID first
         if "Linux" == platform.system():
             try:
-                DEVICE.detach_kernel_driver(0)
+                self.DEVICE.detach_kernel_driver(0)
             except:
                 pass # already unregistered    
 
-        DEVICE.set_configuration()
-        cfg = DEVICE.get_active_configuration()
+        self.DEVICE.set_configuration()
+        cfg = self.DEVICE.get_active_configuration()
         intf = cfg[(0,0)]
 
-        epBulkWriter = usb.util.find_descriptor(
+        self.epBulkWriter = usb.util.find_descriptor(
             intf,
             custom_match = \
                 lambda e: \
                 usb.util.endpoint_direction(e.bEndpointAddress) == \
                 usb.util.ENDPOINT_OUT)
-        epBulkReader = usb.util.find_descriptor(
+        self.epBulkReader = usb.util.find_descriptor(
             intf,
             custom_match = \
                 lambda e: \
                 usb.util.endpoint_direction(e.bEndpointAddress) == \
                 usb.util.ENDPOINT_IN)
 
-        Protocol = pmapi.USB_protocol(DEVICE)
+        self.Protocol = pmapi.USB_protocol(self.DEVICE)
         #notes are poorly documented, values are:
         #ctrl_transfer(bmRequestType, bmRequest, wValue, wIndex)
 
@@ -83,28 +92,28 @@ class Monsoon(object):
 
     def setVout(self,value):
         vout = value * op.Conversion.FLOAT_TO_INT
-        Protocol.sendCommand(op.OpCodes.setMainVoltage,vout) 
+        self.Protocol.sendCommand(op.OpCodes.setMainVoltage,vout) 
     def setPowerupTime(self,value):
-        Protocol.sendCommand(op.OpCodes.setPowerupTime,value)
+        self.Protocol.sendCommand(op.OpCodes.setPowerupTime,value)
     def setPowerUpCurrentLimit(self, value):
         value = self.raw_from_amps(value)
-        Protocol.sendCommand(op.OpCodes.SetPowerUpCurrentLimit,value)
+        self.Protocol.sendCommand(op.OpCodes.SetPowerUpCurrentLimit,value)
     def setRunTimeCurrentLimit(self, value):
         value = self.raw_from_amps(value)
-        Protocol.sendCommand(op.OpCodes.SetRunCurrentLimit,value)
+        self.Protocol.sendCommand(op.OpCodes.SetRunCurrentLimit,value)
     def setUSBPassthroughMode(self, USBPassthroughCode):
-        Protocol.sendCommand(op.OpCodes.setUsbPassthroughMode,USBPassthroughCode)
+        self.Protocol.sendCommand(op.OpCodes.setUsbPassthroughMode,USBPassthroughCode)
     def setVoltageChannel(self, VoltageChannelCode):
-        Protocol.sendCommand(op.OpCodes.setVoltageChannel,value)
+        self.Protocol.sendCommand(op.OpCodes.setVoltageChannel,value)
 
     def setTemperatureLimit(self,value):
         """Sets the fan turn-on temperature limit.  Only valid in HVPM."""
         raw = self.raw_from_degrees(value)
-        Protocol.sendCommand(op.OpCodes.setTemperatureLimit,raw)
+        self.Protocol.sendCommand(op.OpCodes.setTemperatureLimit,raw)
 
     def getSerialNumber(self):
         """Get the device serial number"""
-        serialNumber = Protocol.getValue(op.OpCodes.getSerialNumber,2)
+        serialNumber = self.Protocol.getValue(op.OpCodes.getSerialNumber,2)
         return serialNumber
 
     def getVoltageChannel(self):
@@ -112,9 +121,9 @@ class Monsoon(object):
 
     def StartSampling(self,calTime=1250,maxTime=0xFFFFFFFF):
         self.fillStatusPacket()
-        Protocol.startSampling(calTime,maxTime)
+        self.Protocol.startSampling(calTime,maxTime)
     def stopSampling(self):
-        Protocol.stopSampling()
+        self.Protocol.stopSampling()
 
     def raw_from_degrees(self, value):
         """For setting the fan temperature limit.  Only valid in HVPM."""
@@ -134,33 +143,33 @@ class Monsoon(object):
     def fillStatusPacket(self):
 
         #Misc Status information.
-        self.statusPacket.firmwareVersion = Protocol.getValue(op.OpCodes.FirmwareVersion,2)
-        self.statusPacket.protocolVersion = Protocol.getValue(op.OpCodes.ProtocolVersion,2)
+        self.statusPacket.firmwareVersion = self.Protocol.getValue(op.OpCodes.FirmwareVersion,2)
+        self.statusPacket.protocolVersion = self.Protocol.getValue(op.OpCodes.ProtocolVersion,2)
         self.statusPacket.temperature = -1 #Not currently supported.
-        self.statusPacket.serialNumber = Protocol.getValue(op.OpCodes.getSerialNumber,2)
-        self.statusPacket.powerupCurrentLimit = self.amps_from_raw(Protocol.getValue(op.OpCodes.SetPowerUpCurrentLimit,2))
-        self.statusPacket.runtimeCurrentLimit = self.amps_from_raw(Protocol.getValue(op.OpCodes.SetRunCurrentLimit,2))
-        self.statusPacket.powerupTime = Protocol.getValue(self.setPowerupTime,1)
-        self.statusPacket.temperatureLimit = self.degrees_from_raw(Protocol.getValue(op.OpCodes.setTemperatureLimit,2))
-        self.statusPacket.usbPassthroughMode = Protocol.getValue(op.OpCodes.setUsbPassthroughMode,1)
-        self.statusPacket.hardwareModel = Protocol.getValue(op.OpCodes.HardwareModel,2)
+        self.statusPacket.serialNumber = self.Protocol.getValue(op.OpCodes.getSerialNumber,2)
+        self.statusPacket.powerupCurrentLimit = self.amps_from_raw(self.Protocol.getValue(op.OpCodes.SetPowerUpCurrentLimit,2))
+        self.statusPacket.runtimeCurrentLimit = self.amps_from_raw(self.Protocol.getValue(op.OpCodes.SetRunCurrentLimit,2))
+        self.statusPacket.powerupTime = self.Protocol.getValue(op.OpCodes.setPowerupTime,1)
+        self.statusPacket.temperatureLimit = self.degrees_from_raw(self.Protocol.getValue(op.OpCodes.setTemperatureLimit,2))
+        self.statusPacket.usbPassthroughMode = self.Protocol.getValue(op.OpCodes.setUsbPassthroughMode,1)
+        self.statusPacket.hardwareModel = self.Protocol.getValue(op.OpCodes.HardwareModel,2)
 
         #Calibration data
-        self.statusPacket.mainFineScale = float(Protocol.getValue(op.OpCodes.setMainFineScale,2))
-        self.statusPacket.mainCoarseScale = float(Protocol.getValue(op.OpCodes.setMainCoarseScale,2)) 
-        self.statusPacket.usbFineScale = float(Protocol.getValue(op.OpCodes.setUSBFineScale,2)) 
-        self.statusPacket.usbCoarseScale = float(Protocol.getValue(op.OpCodes.setUSBCoarseScale,2))
-        self.statusPacket.auxFineScale = float(Protocol.getValue(op.OpCodes.setAuxFineScale,2))
-        self.statusPacket.auxCoarseScale = float(Protocol.getValue(op.OpCodes.setAuxCoarseScale,2))
+        self.statusPacket.mainFineScale = float(self.Protocol.getValue(op.OpCodes.setMainFineScale,2))
+        self.statusPacket.mainCoarseScale = float(self.Protocol.getValue(op.OpCodes.setMainCoarseScale,2)) 
+        self.statusPacket.usbFineScale = float(self.Protocol.getValue(op.OpCodes.setUSBFineScale,2)) 
+        self.statusPacket.usbCoarseScale = float(self.Protocol.getValue(op.OpCodes.setUSBCoarseScale,2))
+        self.statusPacket.auxFineScale = float(self.Protocol.getValue(op.OpCodes.setAuxFineScale,2))
+        self.statusPacket.auxCoarseScale = float(self.Protocol.getValue(op.OpCodes.setAuxCoarseScale,2))
 
-        self.statusPacket.mainFineZeroOffset = float(Protocol.getValue(op.OpCodes.SetMainFineZeroOffset,2))
-        self.statusPacket.mainCoarseZeroOffset = float(Protocol.getValue(op.OpCodes.SetMainCoarseZeroOffset,2))
-        self.statusPacket.usbFineZeroOffset = float(Protocol.getValue(op.OpCodes.SetUSBFineZeroOffset,2))
-        self.statusPacket.usbCoarseZeroOffset = float(Protocol.getValue(op.OpCodes.SetUSBCoarseZeroOffset,2))
+        self.statusPacket.mainFineZeroOffset = float(self.Protocol.getValue(op.OpCodes.SetMainFineZeroOffset,2))
+        self.statusPacket.mainCoarseZeroOffset = float(self.Protocol.getValue(op.OpCodes.SetMainCoarseZeroOffset,2))
+        self.statusPacket.usbFineZeroOffset = float(self.Protocol.getValue(op.OpCodes.SetUSBFineZeroOffset,2))
+        self.statusPacket.usbCoarseZeroOffset = float(self.Protocol.getValue(op.OpCodes.SetUSBCoarseZeroOffset,2))
 
 
     def BulkRead(self):
-        return(DEVICE.read(0x81,64,timeout=0))
+        return(self.DEVICE.read(0x81,64,timeout=0))
 
     def swizzlePacket(self, packet):
         length = len(packet)
