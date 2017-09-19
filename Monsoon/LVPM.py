@@ -51,7 +51,7 @@ class Monsoon(object):
             try:
                 self.DEVICE.detach_kernel_driver(0)
             except:
-                pass # already unregistered    
+                pass # already unregistered
 
         self.DEVICE.set_configuration()
         cfg = self.DEVICE.get_active_configuration()
@@ -69,10 +69,10 @@ class Monsoon(object):
                 lambda e: \
                 usb.util.endpoint_direction(e.bEndpointAddress) == \
                 usb.util.ENDPOINT_IN)
-        
+
         self.Protocol = pmapi.USB_protocol(self.DEVICE)
-        
-    
+
+
 
 
     def __amps_from_raw(self,raw):
@@ -83,7 +83,7 @@ class Monsoon(object):
 
     def __raw_from_amps(self,value):
         """Translate amp setting for overcurrent protection into EEPROM value"""
-        result = 1023 * (1.0 - (amps/8.0))
+        result = 1023 * (1.0 - (value/8.0))
         return result
 
 
@@ -91,7 +91,7 @@ class Monsoon(object):
         """Set Vout.  Valid values from 2.01-4.55.  0 = turn off."""
         if(value > 2.00 and value < 4.56 or value == 0):
             vout = value * op.Conversion.FLOAT_TO_INT
-            self.Protocol.sendCommand(op.OpCodes.setMainVoltage,vout) 
+            self.Protocol.sendCommand(op.OpCodes.setMainVoltage,vout)
         else:
             raise Exception("Invalid Voltage value")
 
@@ -119,7 +119,7 @@ class Monsoon(object):
 
     def setVoltageChannel(self, VoltageChannelCode):
         """Sets voltage measurement channel.  0 = Main & USB, 1 = Main & Aux"""
-        self.Protocol.sendCommand(op.OpCodes.setVoltageChannel,value)
+        self.Protocol.sendCommand(op.OpCodes.setVoltageChannel,VoltageChannelCode)
 
     def getVoltageChannel(self):
         """0 = Main & USB, 1 = Main & Aux"""
@@ -144,7 +144,7 @@ class Monsoon(object):
         self.statusPacket.auxCoarseResistorOffset = float(self.Protocol.getValue(op.OpCodes.setAuxCoarseResistorOffset,1))
         auxCoarseResistor = self.auxFactoryResistor + self.statusPacket.auxCoarseResistorOffset * 0.0001
 
-        
+
         self.statusPacket.mainFineScale = 35946.0 * (self.factoryRes / mainFineResistor)
         self.statusPacket.mainCoarseScale = 3103.4 * (self.factoryRes / mainCoarseResistor)
         self.statusPacket.usbFineScale = 35946.0 * (self.factoryRes / usbFineResistor)
