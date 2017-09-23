@@ -75,7 +75,7 @@ class Monsoon(object):
         result = 8.0*(1.0-(raw/1023.0))
         return result
 
-    def __raw_from_amps(self,value):
+    def __raw_from_amps(self,amps):
         """Translate amp setting for overcurrent protection into EEPROM value"""
         result = 1023 * (1.0 - (amps/8.0))
         return result
@@ -113,7 +113,7 @@ class Monsoon(object):
 
     def setVoltageChannel(self, VoltageChannelCode):
         """Sets voltage measurement channel.  0 = Main & USB, 1 = Main & Aux"""
-        self.Protocol.sendCommand(op.OpCodes.setVoltageChannel,value)
+        self.Protocol.sendCommand(op.OpCodes.setVoltageChannel,VoltageChannelCode)
 
     def getVoltageChannel(self):
         """0 = Main & USB, 1 = Main & Aux"""

@@ -95,7 +95,7 @@ class Monsoon(object):
     def setUSBPassthroughMode(self, USBPassthroughCode):
         self.Protocol.sendCommand(op.OpCodes.setUsbPassthroughMode,USBPassthroughCode)
     def setVoltageChannel(self, VoltageChannelCode):
-        self.Protocol.sendCommand(op.OpCodes.setVoltageChannel,value)
+        self.Protocol.sendCommand(op.OpCodes.setVoltageChannel,VoltageChannelCode)
 
     def setTemperatureLimit(self,value):
         """Sets the fan turn-on temperature limit.  Only valid in HVPM."""
@@ -108,7 +108,7 @@ class Monsoon(object):
         return serialNumber
 
     def getVoltageChannel(self):
-        return(Protocol.getValue(op.OpCodes.setVoltageChannel,1))
+        return(self.Protocol.getValue(op.OpCodes.setVoltageChannel,1))
 
     def StartSampling(self,calTime=1250,maxTime=0xFFFFFFFF):
         self.fillStatusPacket()
