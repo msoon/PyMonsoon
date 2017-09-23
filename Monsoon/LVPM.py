@@ -1,15 +1,9 @@
-import sys
 import platform
-import time
-import socket
-import re
-import base64
 
 import usb.core
 import usb.util
 import struct
 import Operations as op
-import time
 
 import numpy as np
 import pmapi

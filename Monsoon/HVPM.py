@@ -1,23 +1,14 @@
-import sys
 import platform
-import time
-import socket
-import re
 import math
-import base64
 
 import usb.core
 import usb.util
 import struct
 import Operations as op
 
-
-import threading
-import time
 import numpy as np
 
 import pmapi
-
 
 class Monsoon(object):
 
@@ -136,8 +127,8 @@ class Monsoon(object):
     def degrees_from_raw(self, value):
         """For setting the fan temperature limit.  Only valid in HVPM"""
         value = int(value)
-        bytes = struct.unpack("BB",struct.pack("H",value)) #Firmware swizzles these bytes.
-        result = bytes[1] + (bytes[0] * 2**-8)
+        bytes_ = struct.unpack("BB",struct.pack("H",value)) #Firmware swizzles these bytes_.
+        result = bytes_[1] + (bytes_[0] * 2**-8)
         return result
 
     def fillStatusPacket(self):

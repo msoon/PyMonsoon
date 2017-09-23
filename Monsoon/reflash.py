@@ -1,19 +1,12 @@
-import sys
 import platform
-import time
-import socket
-import re
-import base64
 
 import usb.core
 import usb.util
 import struct
 import Operations as op
 from copy import deepcopy
-import time
 import numpy as np
 
-import binascii
 import array
 DEVICE = None
 DEVICE_TYPE = None
@@ -74,16 +67,16 @@ class bootloaderMonsoon(object):
             sendData.append(data[i])
         for i in range(len(data),length):
             sendData.append(0)
-        a = epBulkWriter.write(sendData,timeout=10000)
+        epBulkWriter.write(sendData,timeout=10000)
         ret = epBulkReader.read(length+5,timeout=10000)
         return ret
         
 
 
 
-    def writeFlash(self, hex):
+    def writeFlash(self, hex_):
         """Writes a hex file to the Power Monitor's PIC.  Uses Intel HEX file format."""
-        Flash, EEPROM,IDlocs,Config  = self.__formatHex(hex)
+        Flash, EEPROM,IDlocs,Config  = self.__formatHex(hex_)
         print("Erasing Flash...")
         self.__writeRegion(op.BootloaderMemoryRegions.Flash,op.BootloaderCommands.EraseFlash,0x0800,Flash,None)
         print("Writing Flash...")
@@ -100,12 +93,12 @@ class bootloaderMonsoon(object):
 
     def __writeRegion(self, memoryRegion,command,addressStart,regionData,errorCheckCommand):
         """Writes information to a memory region."""
-        address = [0 for x in range(3)]
-        data = [0 for x in range(16)]
+        address = [0 for _ in range(3)]
+        data = [0 for _ in range(16)]
         result = True
         progressThresholds = [x*10 for x in range(11)]
         progressindex = 0
-        test = len(regionData)
+        len(regionData)
         for i in range(addressStart, len(regionData), 16):
             memoryIndex = struct.unpack("BBBB",struct.pack('I', i))
             address[0] = memoryRegion
@@ -128,7 +121,7 @@ class bootloaderMonsoon(object):
 
     def __writeChunk(self, memoryRegion,command,addressStart,regionData,errorCheckCommand):
         result = True
-        address = [0 for x in range(3)]
+        address = [0 for _ in range(3)]
         address[0] = memoryRegion
         address[1] = 0
         address[2] = 0
@@ -162,26 +155,26 @@ class bootloaderMonsoon(object):
         length = output[0]
         address.append(output[1])
         address.append(output[2])
-        type = output[3]
+        type_ = output[3]
         Data = output[4:4+length]
         checksum = output[len(output)-1]
-        return address, type, Data, checksum
+        return address, type_, Data, checksum
 
 
     def getHeaderFromFWM(self, filename):
         """Strips the header from a Monsoon FWM file, returns the HEX file and the formatted header.
         Header format [VID,PID,Rev,Model]"""
         f = open(filename,'r')
-        hex = f.read()
+        hex_ = f.read()
         f.close()
 
-        headerEnd = hex.find(':')
-        header = hex[0:headerEnd]
+        headerEnd = hex_.find(':')
+        header = hex_[0:headerEnd]
         offset = 7
         count = array.array('B', header[offset])[0]
         offset += 1
-        hex = hex[headerEnd:len(hex)]
-        outHeader = [0 for x in range(4)]
+        hex_ = hex_[headerEnd:len(hex_)]
+        outHeader = [0 for _ in range(4)]
         headers = []
         i = 0
         for i in range(count):
@@ -197,39 +190,39 @@ class bootloaderMonsoon(object):
 
             headers.append(test)
             i+= 1
-        return headers, hex
+        return headers, hex_
 
     def getHexFile(self, filename):
         """Reads an Intel HEX file."""
         f = open(filename,'r')
-        hex = f.read()
+        hex_ = f.read()
         f.close()
-        return hex
+        return hex_
 
-    def __formatHex(self,hex):
-        """Takes raw hex input, and turns it into an array of hex lines."""
+    def __formatHex(self,hex_):
+        """Takes raw hex_ input, and turns it into an array of hex_ lines."""
         output = []
-        lineEnd = hex.find('\n')
+        lineEnd = hex_.find('\n')
         while lineEnd > 0:
-            output.append(hex[0:lineEnd])
-            hex = hex[lineEnd+1:len(hex)]
-            lineEnd = hex.find('\n')
+            output.append(hex_[0:lineEnd])
+            hex_ = hex_[lineEnd+1:len(hex_)]
+            lineEnd = hex_.find('\n')
         Flash, EEPROM,IDlocs,Config = self.__formatAsPICFlash(output)
         return  Flash, EEPROM,IDlocs,Config 
 
-    def __formatAsPICFlash(self, hex):
-        """Formats an array of hex lines as PIC memory regions."""
-        flash = [0xff for x in range(32768)]
-        EEPROM = [0xff for x in range(256)]
-        IDlocs = [0xff for x in range(16)]
-        Config  = [0xff for x in range(14)]
+    def __formatAsPICFlash(self, hex_):
+        """Formats an array of hex_ lines as PIC memory regions."""
+        flash = [0xff for _ in range(32768)]
+        EEPROM = [0xff for _ in range(256)]
+        IDlocs = [0xff for _ in range(16)]
+        Config  = [0xff for _ in range(14)]
         addressMSB = 0
-        for line in hex:
-            address, type, Data, checksum = self.__byteLine(line)
+        for line in hex_:
+            address, type_, Data, _ = self.__byteLine(line)
             intAddress = struct.unpack("h",struct.pack("BB", address[1],address[0]))[0]
-            if(type == op.hexLineType.ExtendedLinearAddress):
+            if(type_ == op.hexLineType.ExtendedLinearAddress):
                 addressMSB = Data[1]
-            if(type == op.hexLineType.Data):
+            if(type_ == op.hexLineType.Data):
                 if(addressMSB == op.BootloaderMemoryRegions.Flash):
                     for byte in Data:
                         flash[intAddress] = byte
