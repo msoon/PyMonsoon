@@ -27,23 +27,19 @@ class Monsoon(object):
         self.padding = np.zeros(64)
         pass
 
-    def setup_usb(self, serialno=-1):
+    def setup_usb(self, serialno=None):
         self.DEVICE = None
         self.DEVICE_TYPE
         self.epBulkWriter
         self.epBulkReader
         self.Protocol
 
-        Devices = usb.core.find(idVendor=0x2AB9, idProduct=0x0001,find_all=True);
-        for Dev in Devices:
-            self.Protocol = pmapi.USB_protocol(Dev)
-            if(self.Protocol.getValue(op.OpCodes.HardwareModel,2) == op.HardwareModel.HVPM):
-                if(self.getSerialNumber() == serialno or serialno == -1):
-                    self.DEVICE = Dev
-                    break;
-        if(self.DEVICE == None):
-            print("Unable to find device")
-
+        def device_matcher(d):
+            return d.idVendor == 0x2AB9 and d.idProduct == 0x0001 and (serialno is None or d.serial_number == str(serialno))
+        self.DEVICE = usb.core.find(custom_match=device_matcher)
+        if (self.DEVICE is None):
+            print('Unable to find device')
+            return
         # On Linux we need to detach usb HID first
         if "Linux" == platform.system():
             try:
