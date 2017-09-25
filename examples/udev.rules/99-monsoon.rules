@@ -1,0 +1,4 @@
+# UDev rule for monsoon power monitor
+# You may want to change the group name for your needs
+
+SUBSYSTEM=="usb",ATTR{idVendor}=="2ab9",ATTR{idProduct}=="0001",MODE="0660",GROUP="plugdev"
