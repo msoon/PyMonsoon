@@ -1,15 +1,9 @@
-import sys
 import platform
-import time
-import socket
-import re
-import base64
 
 import usb.core
 import usb.util
 import struct
 import Operations as op
-import time
 
 import numpy as np
 import pmapi
@@ -81,7 +75,7 @@ class Monsoon(object):
         result = 8.0*(1.0-(raw/1023.0))
         return result
 
-    def __raw_from_amps(self,value):
+    def __raw_from_amps(self,amps):
         """Translate amp setting for overcurrent protection into EEPROM value"""
         result = 1023 * (1.0 - (value/8.0))
         return result

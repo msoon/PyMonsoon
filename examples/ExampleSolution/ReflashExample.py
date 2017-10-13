@@ -7,7 +7,7 @@ Mon = reflash.bootloaderMonsoon()
 Mon.setup_usb()
 Header, Hex = Mon.getHeaderFromFWM('../../Firmware/LVPM_RevE_Prot_1_Ver25_beta.fwm')
 if(Mon.verifyHeader(Header)):
-   Mon.writeFlash(Hex)
+    Mon.writeFlash(Hex)
 
 ######################################
 # Return to the serial protocol firmware.

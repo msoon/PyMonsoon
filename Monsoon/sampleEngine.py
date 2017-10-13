@@ -121,9 +121,9 @@ class SampleEngine:
         """Sets channel that controls the trigger."""
         self.__triggerChannel = triggerChannel
 
-    def ConsoleOutput(self, bool):
+    def ConsoleOutput(self, boolValue):
         """Enables or disables the display of realtime measurements"""
-        self.__outputConsoleMeasurements = bool
+        self.__outputConsoleMeasurements = boolValue
 
     def enableChannel(self,channel):
         """Enables a channel.  Takes sampleEngine.channel class value as input."""
@@ -192,25 +192,24 @@ class SampleEngine:
             self.__timeStamps.append(measurement)
 
     def __evalStartTrigger(self, measurement):
-        test = self.__startTriggerStyle(measurement,self.__startTriggerLevel)
+        self.__startTriggerStyle(measurement,self.__startTriggerLevel)
         self.__startTriggerSet = np.any(self.__startTriggerStyle(measurement,self.__startTriggerLevel))
 
     def __evalStopTrigger(self,measurement):
-        test1 = self.__sampleCount
-        test2 = self.__sampleLimit
+        self.__sampleCount
+        self.__sampleLimit
         if(self.__sampleCount > self.__sampleLimit and self.__sampleLimit is not triggers.SAMPLECOUNT_INFINITE):
             self.__stopTriggerSet = True
         test = self.__stopTriggerStyle(measurement,self.__stopTriggerLevel)
-        example = self.__stopTriggerLevel
+        self.__stopTriggerLevel
         if(np.any(test)):
             self.__stopTriggerSet = True
 
     def __vectorProcess(self,measurements):
         """Translates raw ADC measurements into current values."""
-       #Currents
+        #Currents
         if(self.__isCalibrated()):
             measurements = np.array(measurements)
-            output = []
             sDebug = ""
             if(self.__channels[channels.MainCurrent]):
             #Main Coarse
@@ -338,14 +337,14 @@ class SampleEngine:
             flags = measurement[1]
             numObs = measurement[2]
             offset = 3
-            for i in range(0,numObs):
+            for _ in range(0,numObs):
                 sample = measurement[offset:offset+10]
                 sample.append(measurement[len(measurement)-1])
                 sampletype = sample[8] & 0x30
                 if(sampletype == ops.SampleType.ZeroCal):
                     self.__processZeroCal(sample)
                 elif(sampletype == ops.SampleType.refCal):
-                   self.__processRefCal(sample)
+                    self.__processRefCal(sample)
                 elif(sampletype == ops.SampleType.Measurement):
                     Samples.append(sample)
                     
@@ -452,7 +451,7 @@ class SampleEngine:
         self.__Reset()
         self.__sampleLimit = samples
         self.monsoon.StartSampling(1250,0xFFFFFFFF)
-        Samples = [[0 for x in range(self.__packetSize+1)] for y in range(self.bulkProcessRate)]
+        Samples = [[0 for _ in range(self.__packetSize+1)] for _ in range(self.bulkProcessRate)]
         S = 0
         debugcount = 0
         minutes = 0
