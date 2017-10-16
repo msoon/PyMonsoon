@@ -1,5 +1,4 @@
 #pragma once
-#include <Windows.h>
 //Operations
 
 UCHAR setMainFineResistorOffset = 0x02;

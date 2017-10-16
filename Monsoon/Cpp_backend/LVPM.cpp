@@ -5,30 +5,26 @@
 #include <iostream>
 #include <thread>
 
-
-
-
-
 LVPM::LVPM()
 {
-	
+
 	for (int i = 0; i < QueueSize; i++)
 	{
 		Packets[i] = 0;
 	}
 }
 
-void LVPM::setup_usb()
-	{
-		handle = openDevice(VendorID, ProductID);
-	}
+void LVPM::setup_usb(int serialno)
+{
+	handle = openDevice(VendorID, ProductID,serialno);
+}
 
 void LVPM::setVout(float value)
-	{
-		int conversion = 1048576 * value;
-		unsigned char opcode = 0x41;
-		sendCommand(handle, opcode, conversion);
-	}
+{
+	int conversion = 1048576 * value;
+	unsigned char opcode = 0x41;
+	sendCommand(handle, opcode, conversion);
+}
 void LVPM::Close()
 {
 	closeDevice(handle);
@@ -37,10 +33,10 @@ void LVPM::Close()
 void LVPM::Start(int calTime, int maxTime)
 {
 	totalSampleCount = 0;
-	running = true;
-	swizzleThread = thread(&LVPM::Enque,this);
-	processThread = thread(&LVPM::ProcessPackets,this);
 	startSampling(handle, calTime, maxTime);
+	running = true;
+	swizzleThread = thread(&LVPM::Enque, this);
+	processThread = thread(&LVPM::ProcessPackets, this);
 
 }
 
@@ -59,7 +55,7 @@ void LVPM::getCalValues()
 {
 	mainFineResistor = factoryResistor + getValue(handle, setMainFineResistorOffset, 1) * 0.0001;
 	mainCoarseResistor = factoryResistor + getValue(handle, setMainCoarseResistorOffset, 1) * 0.0001;
-	
+
 	mainFineScale = 35946.0 * (factoryResistor / mainFineResistor);
 	mainCoarseScale = 3103.4 * (factoryResistor / mainCoarseResistor);
 }
@@ -67,16 +63,16 @@ void LVPM::getCalValues()
 void LVPM::SwizzlePackets(UCHAR* Packets, int numPackets)
 {
 	int offset = 0;
-	
+
 	for (int i = 0; i < numPackets; i++)
 	{
 		std::vector<UCHAR> Packet;
-		
+
 		int packetStart = i * packetLength;
 		Packet.push_back(Packets[packetStart]);
-		Packet.push_back(Packets[packetStart+1]);
-		Packet.push_back(Packets[packetStart+2]);
-		Packet.push_back(Packets[packetStart+3]);
+		Packet.push_back(Packets[packetStart + 1]);
+		Packet.push_back(Packets[packetStart + 2]);
+		Packet.push_back(Packets[packetStart + 3]);
 		for (offset = 4; offset < packetLength; offset += 2)
 		{
 			Packet.push_back(Packets[packetStart + offset + 1]);
@@ -92,7 +88,7 @@ void LVPM::Enque()
 {
 	while (running)
 	{
-		int count = getSamples(Packets);
+		int count = getSamples(Packets, QueueSize);
 		SwizzlePackets(Packets, count);
 	}
 }

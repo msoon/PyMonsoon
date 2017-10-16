@@ -5,10 +5,10 @@
 #include <future>
 #include <iostream>
 #include <thread>
-
+#include <string>
 
 using namespace std;
-static const int QueueSize = 640000; //10,000 packet buffer, approximately 2-6 seconds worth of samples.
+static const int QueueSize = 64000; //10,000 packet buffer, approximately 2-6 seconds worth of samples.
 static const int packetLength = 64; //per firmware spec.
 volatile bool running;
 unsigned char Queue[QueueSize];
@@ -16,7 +16,59 @@ std::vector<UCHAR> processingQueue[QueueSize];
 int queueIndex = 0;
 int readIndex = 0;
 thread sampleThread;
-bool kernalDriverDetatched = false;
+
+
+//Python test
+static const int pyQueueSize = 64000;
+UCHAR g_packets[pyQueueSize];
+libusb_device_handle* g_handle;
+int g_count = 0;
+void pySetup(int VID, int PID, int serialno)
+{
+	g_handle = openDevice(VID, PID,serialno);
+}
+
+void pyClose()
+{
+	closeDevice(g_handle);
+}
+
+void pyStart(int calTime, int maxTime)
+{
+	for (int i = 0; i < QueueSize; i++)
+	{
+		g_packets[i] = 0;
+	}
+	startSampling(g_handle, calTime, maxTime);
+}
+
+void pyStop()
+{
+	stopSampling(g_handle);
+}
+
+UCHAR* pyGetBulkData(int num_numbers, UCHAR *packets)
+{
+	g_count = getSamples(packets, num_numbers);
+	return packets;
+}
+
+int pyQueueCount()
+{
+	return g_count;
+}
+
+void pySendCommand(unsigned char operation, int value)
+{
+	sendCommand(g_handle, operation, value);
+}
+
+int pyGetValue(unsigned char operation, int length)
+{
+	return getValue(g_handle, operation, length);
+}
+
+//CPP Functions:
 
 void sendCommand(libusb_device_handle* handle, unsigned char operation, int value)
 {
@@ -33,9 +85,10 @@ void stopSampling(libusb_device_handle* handle)
 	sampleThread.join();
 }
 
-int getSamples(UCHAR* processingQueue)
+int getSamples(UCHAR* processingQueue, int maxTransfer)
 {
 	int count = 0;
+	int numPackets = 0;
 	if (queueIndex < readIndex)
 	{
 		count = QueueSize;
@@ -44,9 +97,13 @@ int getSamples(UCHAR* processingQueue)
 	{
 		count = queueIndex;
 	}
-	int numPackets = count / packetLength;
+	if ((count - readIndex) > maxTransfer)
+	{
+		count = readIndex + maxTransfer;
+	}
+	numPackets = (count - readIndex) / packetLength;
 	int processingIndex = 0;
-	for(int i = readIndex; i < count; i ++)
+	for (int i = readIndex; i < count; i++)
 	{
 		processingQueue[processingIndex] = Queue[i];
 		processingIndex++;
@@ -56,6 +113,14 @@ int getSamples(UCHAR* processingQueue)
 	{
 		readIndex = 0;
 	}
+	/*
+	std::cout <<"Number of packets in Queue: ";
+	std::cout << queueIndex /64;
+	std::cout << "\n";
+	std::cout << "Number of packets read: ";
+	std::cout << readIndex/64;
+	std::cout << "\n";
+	*/
 	return numPackets;
 
 }
@@ -67,7 +132,6 @@ void startSampling(libusb_device_handle* handle, int calTime, int maxTime)
 	short wValue = (values_array[0] | values_array[1]);
 	short wIndex = (0x02 | 0);
 	libusb_control_transfer(handle, 0x40, 0x02, wValue, wIndex, reinterpret_cast<unsigned char*>(maxTime_array.data()), 4, 5000);
-	//std::future<void> result(std::async(getBulkData));
 	sampleThread = thread(getBulkData, handle);
 }
 
@@ -90,16 +154,45 @@ int getValue(libusb_device_handle* handle, unsigned char operation, int length)
 	return result;
 }
 
-libusb_device_handle* openDevice(int VID, int PID)
+libusb_device_handle* openDevice(int VID, int PID, int serialno)
 {
+	libusb_device **usb_devices;
+	libusb_context *usb_context;
 	int res = 0;
 	libusb_device_handle* handle = 0;
-	res = libusb_init(0);
-	handle = libusb_open_device_with_vid_pid(0, VID, PID);
-	if (libusb_kernel_driver_active(handle, 0))
+	int kernalDriverDetached = 0; //TODO:  Kernal Driver detaching needs to happen with Linux.
+	res = libusb_init(&usb_context);
+	int device_count;
+	device_count = libusb_get_device_list(usb_context, &usb_devices);
+	libusb_device_descriptor d;
+	string ss;
+	unsigned char data[6];
+	for (int i = 0; i < device_count; i++)
 	{
-		libusb_detach_kernel_driver(handle, 0);
-		kernalDriverDetatched = true;
+		res = libusb_get_device_descriptor(usb_devices[i], &d);
+		if (d.idProduct == PID && d.idVendor == VID)
+		{
+			res = libusb_open(usb_devices[i], &handle);
+			if(res == 0)
+			{
+				libusb_get_string_descriptor_ascii(handle, d.iSerialNumber, data, sizeof(data));
+				ss = "";
+				for (int i = 0; i < 6; i++)
+				{
+					ss += data[i]; // call std::string::operator +=(char*)
+				}
+				int serial = std::stoi(ss);
+				if (serialno == NULL || serialno == serial)
+				{
+					break;
+				}
+				else
+				{
+					libusb_release_interface(handle, 0);
+				}
+			}
+		}
+
 	}
 	res = libusb_claim_interface(handle, 0);
 	return handle;
@@ -122,18 +215,6 @@ void getBulkData(libusb_device_handle* handle)
 
 		if (lengthTransferred > 0)
 		{
-			//TODO:  It might not strictly be necessary to zero out unused bits.
-			//But I expect doing this will prevent someone from pulling their hair out while debugging later.
-			//If you need that tiny extra ounce of performance, get rid of this.
-			/*
-			for (int i = queueIndex; i < queueIndex + packetLength; i++)
-			{
-				std::cout << std::hex << static_cast<unsigned>(Queue[i]);
-				std::cout << " ";
-			}
-			std::cout << "\n";
-			*/
-			//std::cout << "\n";
 			queueIndex += packetLength;//Always increment by 64 bytes.
 			if (queueIndex >= QueueSize)
 			{
@@ -144,21 +225,11 @@ void getBulkData(libusb_device_handle* handle)
 	}
 }
 
-void testRun(int blah)
-{
-	std::cout << blah;
-}
 
 void closeDevice(libusb_device_handle* handle)
 {
-	if (kernalDriverDetatched)
-	{
-		libusb_attach_kernel_driver(handle, 0);
-		kernalDriverDetatched = false;
-	}
 	libusb_release_interface(handle, 0);
-	
-	libusb_exit(0);
+	//libusb_exit(0);
 }
 
 std::vector<unsigned char> intToBytes(int paramInt)

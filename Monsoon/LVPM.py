@@ -29,44 +29,12 @@ class Monsoon(object):
         self.__padding = np.zeros(64)
         pass
 
-    def setup_usb(self, serialno = -1):
-        Devices = usb.core.find(idVendor=0x2AB9, idProduct=0x0001,find_all=True);
-        for Dev in Devices:
-            self.Protocol = pmapi.USB_protocol(Dev)
-            if(self.Protocol.getValue(op.OpCodes.HardwareModel,2) == op.HardwareModel.LVPM):
-                if(self.getSerialNumber() == serialno or serialno == -1): #Either find the specific one, or connect to the first available device
-                    self.DEVICE = Dev
-                    break;
-        if(self.DEVICE == None):
-            print("Unable to find device")
+    def closeDevice(self):
+        self.Protocol.closeDevice();
 
-        # On Linux we need to detach usb HID first
-        if "Linux" == platform.system():
-            try:
-                self.DEVICE.detach_kernel_driver(0)
-            except:
-                pass # already unregistered
-
-        self.DEVICE.set_configuration()
-        cfg = self.DEVICE.get_active_configuration()
-        intf = cfg[(0,0)]
-
-        self.epBulkWriter = usb.util.find_descriptor(
-            intf,
-            custom_match = \
-                lambda e: \
-                usb.util.endpoint_direction(e.bEndpointAddress) == \
-                usb.util.ENDPOINT_OUT)
-        self.epBulkReader = usb.util.find_descriptor(
-            intf,
-            custom_match = \
-                lambda e: \
-                usb.util.endpoint_direction(e.bEndpointAddress) == \
-                usb.util.ENDPOINT_IN)
-
-        self.Protocol = pmapi.USB_protocol(self.DEVICE)
-
-
+    def setup_usb(self, serialno = None, Protocol=pmapi.USB_protocol()):
+        Protocol.Connect(op.HardwareModel.LVPM,serialno)
+        self.Protocol = Protocol
 
 
     def __amps_from_raw(self,raw):
@@ -159,8 +127,10 @@ class Monsoon(object):
         self.Protocol.stopSampling()
         #ctrl_transfer(bmRequestType, bmRequest, wValue, wIndex)
     def BulkRead(self):
-        """Read a sample packet"""
-        return(self.DEVICE.read(0x81,64,timeout=0))
+        """Read sample packets.
+        Returns an array of 64 byte packets concatenated together.
+        Number of packets depends on the protocol selected."""
+        return self.Protocol.BulkRead()
 
     def swizzlePacket(self, packet):
         """Byte order for 2-byte values is swapped for the majority of the measurement packet.  This fixes that."""
@@ -171,6 +141,7 @@ class Monsoon(object):
         swizzledBytes = np.insert(evenBytes,np.arange(len(oddBytes)),oddBytes)
         swizzledPacket = np.hstack([packet[0:4],swizzledBytes[:],self.__padding[0:(58-length)]])
         swizzledPacket = np.array(swizzledPacket).astype('b')
+        swizzledPacket = swizzledPacket[0:58]
         packetLength = len(swizzledPacket)
         rawBytes = struct.pack('b'*packetLength,*swizzledPacket)
         measurements = struct.unpack("HBBhhhhhhHHBBhhhhhhhHBBhhhhhhhHBB",rawBytes)

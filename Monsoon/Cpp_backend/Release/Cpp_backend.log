@@ -1,17 +1,21 @@
-﻿cl : Command line warning D9002: ignoring unknown option '--gcc'
-  stdafx.cpp
-C:\PyMonsoon\Monsoon\Cpp_backend\libusb-1.0.9\libusb\libusb.h(939): warning C4200: nonstandard extension used: zero-sized array in struct/union
-  C:\PyMonsoon\Monsoon\Cpp_backend\libusb-1.0.9\libusb\libusb.h(939): note: This member will be ignored by a defaulted constructor or copy/move assignment operator
-c:\pymonsoon\monsoon\cpp_backend\stdafx.h(79): warning C4305: 'initializing': truncation from 'double' to 'float'
-c:\pymonsoon\monsoon\cpp_backend\stdafx.h(81): warning C4305: 'initializing': truncation from 'double' to 'float'
-c:\pymonsoon\monsoon\cpp_backend\stdafx.h(82): warning C4305: 'initializing': truncation from 'double' to 'float'
-c:\pymonsoon\monsoon\cpp_backend\stdafx.h(83): warning C4305: 'initializing': truncation from 'double' to 'float'
-cl : Command line warning D9002: ignoring unknown option '--gcc'
+﻿  stdafx.cpp
+C:\PyMonsoon\Monsoon\Cpp_backend\libusb\include\libusb-1.0\libusb.h(738): warning C4200: nonstandard extension used: zero-sized array in struct/union
+  C:\PyMonsoon\Monsoon\Cpp_backend\libusb\include\libusb-1.0\libusb.h(738): note: This member will be ignored by a defaulted constructor or copy/move assignment operator
+C:\PyMonsoon\Monsoon\Cpp_backend\libusb\include\libusb-1.0\libusb.h(769): warning C4200: nonstandard extension used: zero-sized array in struct/union
+  C:\PyMonsoon\Monsoon\Cpp_backend\libusb\include\libusb-1.0\libusb.h(769): note: This member will be ignored by a defaulted constructor or copy/move assignment operator
+C:\PyMonsoon\Monsoon\Cpp_backend\libusb\include\libusb-1.0\libusb.h(1265): warning C4200: nonstandard extension used: zero-sized array in struct/union
+  C:\PyMonsoon\Monsoon\Cpp_backend\libusb\include\libusb-1.0\libusb.h(1265): note: This member will be ignored by a defaulted constructor or copy/move assignment operator
+c:\pymonsoon\monsoon\cpp_backend\stdafx.h(96): warning C4305: 'initializing': truncation from 'double' to 'float'
+c:\pymonsoon\monsoon\cpp_backend\stdafx.h(98): warning C4305: 'initializing': truncation from 'double' to 'float'
+c:\pymonsoon\monsoon\cpp_backend\stdafx.h(99): warning C4305: 'initializing': truncation from 'double' to 'float'
+c:\pymonsoon\monsoon\cpp_backend\stdafx.h(100): warning C4305: 'initializing': truncation from 'double' to 'float'
+  Cpp_backend.cpp
+Cpp_backend.cpp(8): warning C4305: 'argument': truncation from 'double' to 'float'
   LVPM.cpp
-c:\pymonsoon\monsoon\cpp_backend\stdafx.h(79): warning C4305: 'initializing': truncation from 'double' to 'float'
-c:\pymonsoon\monsoon\cpp_backend\stdafx.h(81): warning C4305: 'initializing': truncation from 'double' to 'float'
-c:\pymonsoon\monsoon\cpp_backend\stdafx.h(82): warning C4305: 'initializing': truncation from 'double' to 'float'
-c:\pymonsoon\monsoon\cpp_backend\stdafx.h(83): warning C4305: 'initializing': truncation from 'double' to 'float'
+c:\pymonsoon\monsoon\cpp_backend\stdafx.h(96): warning C4305: 'initializing': truncation from 'double' to 'float'
+c:\pymonsoon\monsoon\cpp_backend\stdafx.h(98): warning C4305: 'initializing': truncation from 'double' to 'float'
+c:\pymonsoon\monsoon\cpp_backend\stdafx.h(99): warning C4305: 'initializing': truncation from 'double' to 'float'
+c:\pymonsoon\monsoon\cpp_backend\stdafx.h(100): warning C4305: 'initializing': truncation from 'double' to 'float'
 LVPM.cpp(28): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
 LVPM.cpp(60): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
 LVPM.cpp(61): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
@@ -24,10 +28,22 @@ LVPM.cpp(159): warning C4244: '=': conversion from 'int' to 'float', possible lo
 LVPM.cpp(166): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
 LVPM.cpp(167): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
 LVPM.cpp(175): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-  run.cpp
-run.cpp(8): warning C4305: 'argument': truncation from 'double' to 'float'
   pmapi.cpp
-  Generating code
-  All 404 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
-  Finished generating code
-  Cpp_backend.vcxproj -> C:\PyMonsoon\Monsoon\Cpp_backend\Release\Cpp_backend.exe
+pmapi.cpp(27): warning C4273: 'pySetup': inconsistent dll linkage
+  c:\pymonsoon\monsoon\cpp_backend\stdafx.h(57): note: see previous definition of 'pySetup'
+pmapi.cpp(32): warning C4273: 'pyClose': inconsistent dll linkage
+  c:\pymonsoon\monsoon\cpp_backend\stdafx.h(58): note: see previous definition of 'pyClose'
+pmapi.cpp(37): warning C4273: 'pyStart': inconsistent dll linkage
+  c:\pymonsoon\monsoon\cpp_backend\stdafx.h(59): note: see previous definition of 'pyStart'
+pmapi.cpp(46): warning C4273: 'pyStop': inconsistent dll linkage
+  c:\pymonsoon\monsoon\cpp_backend\stdafx.h(60): note: see previous definition of 'pyStop'
+pmapi.cpp(51): warning C4273: 'pyGetBulkData': inconsistent dll linkage
+  c:\pymonsoon\monsoon\cpp_backend\stdafx.h(61): note: see previous definition of 'pyGetBulkData'
+pmapi.cpp(57): warning C4273: 'pyQueueCount': inconsistent dll linkage
+  c:\pymonsoon\monsoon\cpp_backend\stdafx.h(62): note: see previous definition of 'pyQueueCount'
+pmapi.cpp(62): warning C4273: 'pySendCommand': inconsistent dll linkage
+  c:\pymonsoon\monsoon\cpp_backend\stdafx.h(63): note: see previous definition of 'pySendCommand'
+pmapi.cpp(67): warning C4273: 'pyGetValue': inconsistent dll linkage
+  c:\pymonsoon\monsoon\cpp_backend\stdafx.h(64): note: see previous definition of 'pyGetValue'
+C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V140\Microsoft.CppBuild.targets(1189,5): warning MSB8012: TargetPath(C:\PyMonsoon\Monsoon\Cpp_backend\$..\(Configuration)\Cpp_backend.exe) does not match the Linker's OutputFile property value (C:\PyMonsoon\Monsoon\Cpp_backend\$..\(Configuration)\Cpp_backend.exe). This may cause your project to build incorrectly. To correct this, please make sure that $(OutDir), $(TargetName) and $(TargetExt) property values match the value specified in %(Link.OutputFile).
+LINK : fatal error LNK1104: cannot open file 'C:\PyMonsoon\Monsoon\Cpp_backend\$..\(Configuration)\Cpp_backend.exe'
