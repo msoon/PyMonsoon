@@ -69,7 +69,7 @@ class USB_protocol(object):
 
     def stopSampling(self):
         """Send a control transfer instructing the Power Monitor to stop sampling."""
-        self.DEVICE.ctrl_transfer(op.Control_Codes.USB_IN_PACKET,op.Control_Codes.USB_REQUEST_STOP,0,0,0,5000)
+        self.DEVICE.ctrl_transfer(op.Control_Codes.USB_OUT_PACKET,op.Control_Codes.USB_REQUEST_STOP,0,0,0,5000)
 
     def startSampling(self,calTime, maxTime):
         """Instruct the Power Monitor to enter sample mode.  
