@@ -13,6 +13,7 @@
 import sys
 import time
 import Monsoon.HVPM as HVPM
+import Monsoon.LVPM as LVPM
 import Monsoon.sampleEngine as sampleEngine
 import Monsoon.Operations as op
 
@@ -36,8 +37,12 @@ def main(unused_argv):
   if FLAGS.avg and FLAGS.avg < 0:
     print "--avg must be greater than 0"
     return
+  
+  if FLAGS.lvpm:
+    mon = LVPM.Monsoon()
+  else:
+    mon = HVPM.Monsoon()
 
-  mon = HVPM.Monsoon()
   mon.setup_usb()
 
   if FLAGS.voltage is not None:
@@ -48,7 +53,7 @@ def main(unused_argv):
 
   if FLAGS.status:
     print "Serialno : %d\n" % mon.getSerialNumber();
-    mon.fillAllStatusPacket()
+    mon.fillStatusPacket()
     status = mon.statusPacket
     attrs = vars(status)
     print '\n'.join("%s : %s" % item for item in attrs.items())
@@ -108,6 +113,7 @@ if __name__ == "__main__":
   flags.DEFINE_list("output", ["main"], "Comma-separated list of sample types "
                     "to output (select from: main, usb, aux, voltage).")
   flags.DEFINE_string("delimiter", " ", "Output delimiter.")
+  flags.DEFINE_boolean("lvpm", False, "Low-voltage power meter.")
 
   main(FLAGS(sys.argv))
 
