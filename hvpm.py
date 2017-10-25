@@ -29,12 +29,12 @@ def main(unused_argv):
   useful_flags = ["voltage", "status", "usbpassthrough", "samples", "current",
                   "startcurrent"]
   if not [f for f in useful_flags if FLAGS.get_flag_value(f, None) is not None]:
-    print __doc__.strip()
-    print FLAGS.main_module_help()
+    print(__doc__.strip())
+    print(FLAGS.main_module_help())
     return
 
   if FLAGS.avg and FLAGS.avg < 0:
-    print "--avg must be greater than 0"
+    print("--avg must be greater than 0")
     return
 
   mon = HVPM.Monsoon()
@@ -47,21 +47,21 @@ def main(unused_argv):
       mon.setVout(FLAGS.voltage)
 
   if FLAGS.status:
-    print "Serialno : %d\n" % mon.getSerialNumber();
+    print("Serialno : %d\n" % mon.getSerialNumber())
     mon.fillAllStatusPacket()
     status = mon.statusPacket
     attrs = vars(status)
-    print '\n'.join("%s : %s" % item for item in attrs.items())
+    print('\n'.join("%s : %s" % item for item in attrs.items()))
 
   if FLAGS.current is not None:
     current = AmpsToApi(FLAGS.current)
     mon.setRunTimeCurrentLimit(current)
-    print "Set runtime current to %d" % FLAGS.current
+    print("Set runtime current to %d" % FLAGS.current)
 
   if FLAGS.startcurrent is not None:
     startcurrent = AmpsToApi(FLAGS.startcurrent)
     mon.setPowerUpCurrentLimit(startcurrent)
-    print "Set start current to %d" % FLAGS.startcurrent
+    print("Set start current to %d" % FLAGS.startcurrent)
 
   if FLAGS.usbpassthrough:
     if FLAGS.usbpassthrough == "off":

@@ -3,10 +3,10 @@ import platform
 import usb.core
 import usb.util
 import struct
-import Operations as op
+from Monsoon import Operations as op
 
 import numpy as np
-import pmapi
+from Monsoon import pmapi
 
 
 

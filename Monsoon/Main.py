@@ -1,9 +1,8 @@
-import LVPM
-import HVPM
-import sampleEngine
-import Operations as op
-import HVPM
-import pmapi
+from Monsoon import LVPM
+from Monsoon import sampleEngine
+from Monsoon import Operations as op
+from Monsoon import HVPM
+from Monsoon import pmapi
 
 
 def testHVPM(serialno=None,Protocol=pmapi.USB_protocol()):
