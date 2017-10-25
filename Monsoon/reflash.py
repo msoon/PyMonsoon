@@ -3,7 +3,7 @@ import platform
 import usb.core
 import usb.util
 import struct
-import Operations as op
+import Monsoon.Operations as op
 from copy import deepcopy
 import numpy as np
 
