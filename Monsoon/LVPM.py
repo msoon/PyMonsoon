@@ -45,7 +45,7 @@ class Monsoon(object):
 
     def __raw_from_amps(self,amps):
         """Translate amp setting for overcurrent protection into EEPROM value"""
-        result = 1023 * (1.0 - (value/8.0))
+        result = 1023 * (1.0 - (amps/8.0))
         return result
 
 
