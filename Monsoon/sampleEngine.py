@@ -2,12 +2,12 @@
 
 import threading
 import time
-import HVPM
+from Monsoon import HVPM
 import struct
 import time
 import math
-from calibrationData import calibrationData
-import Operations as ops
+from Monsoon.calibrationData import calibrationData
+import Monsoon.Operations as ops
 from copy import deepcopy
 import numpy as np
 
