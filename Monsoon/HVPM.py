@@ -69,6 +69,23 @@ class Monsoon(object):
         serialNumber = self.Protocol.getValue(op.OpCodes.getSerialNumber,2)
         return serialNumber
 
+    def setDefaultScaleValues(self):
+        """Loads default scaling values into the Power Monitor.  
+        Warning:  This wipes away existing calibration data.  Use with Caution."""
+        #Main channel
+        self.Protocol.sendCommand(op.OpCodes.setMainFineScale, 36500)
+        self.Protocol.sendCommand(op.OpCodes.SetMainFineZeroOffset, 15)
+        self.Protocol.sendCommand(op.OpCodes.setMainCoarseScale,6400)
+        self.Protocol.sendCommand(op.OpCodes.SetMainCoarseZeroOffset,15)
+        #USB Channel
+        self.Protocol.sendCommand(op.OpCodes.setUSBFineScale,14000)
+        self.Protocol.sendCommand(op.OpCodes.SetUSBFineZeroOffset,0)
+        self.Protocol.sendCommand(op.OpCodes.setUSBCoarseScale,600)
+        self.Protocol.sendCommand(op.OpCodes.SetUSBCoarseZeroOffset,0)
+        #Aux channel
+        self.Protocol.sendCommand(op.OpCodes.setAuxFineScale,3100)
+        self.Protocol.sendCommand(op.OpCodes.setAuxCoarseScale,250)
+
     def getVoltageChannel(self):
         return(self.Protocol.getValue(op.OpCodes.setVoltageChannel,1))
 
