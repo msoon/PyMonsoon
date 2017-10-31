@@ -1,5 +1,5 @@
 import struct
-import Monsoon.Operations as op
+from Monsoon import Operations as op
 import ctypes
 import platform
 import usb.core
@@ -59,11 +59,11 @@ class USB_protocol(object):
         """Send a USB Control transfer.  Normally this is used to set an EEPROM value."""
         try:
             value = int(value)
-            value_array = struct.unpack("4b",struct.pack("I",value))
+            value_array = struct.unpack("4B",struct.pack("I",value))
             operation_array = struct.unpack("4b",struct.pack("I",operation))
-            wValue = struct.unpack("H",struct.pack("bb",value_array[0],value_array[1]))[0]
-            wIndex = struct.unpack("H",struct.pack("bb",operation_array[0],value_array[2]))[0]
-            self.DEVICE.ctrl_transfer(op.Control_Codes.USB_OUT_PACKET,op.Control_Codes.USB_SET_VALUE,wValue,wIndex,"0",5000)
+            wValue = struct.unpack("H",struct.pack("BB",value_array[0],value_array[1]))[0]
+            wIndex = struct.unpack("H",struct.pack("BB",operation_array[0],value_array[2]))[0]
+            self.DEVICE.ctrl_transfer(op.Control_Codes.USB_OUT_PACKET,op.Control_Codes.USB_SET_VALUE,wValue,wIndex,value_array,5000)
         except:
             print("Control Transfer Error")
 
