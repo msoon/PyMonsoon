@@ -93,7 +93,7 @@ class SampleEngine:
         self.__triggerChannel = channels.timeStamp
         self.__startTriggerLevel = 0
         self.__startTriggerStyle = np.vectorize(triggers.GREATER_THAN)
-        self.__stopTriggerLevel = 10
+        self.__stopTriggerLevel = triggers.SAMPLECOUNT_INFINITE
         self.__stopTriggerStyle = np.vectorize(triggers.GREATER_THAN)
         self.__sampleLimit = 50000
 
@@ -200,10 +200,10 @@ class SampleEngine:
         self.__sampleLimit
         if(self.__sampleCount > self.__sampleLimit and self.__sampleLimit is not triggers.SAMPLECOUNT_INFINITE):
             self.__stopTriggerSet = True
-        test = self.__stopTriggerStyle(measurement,self.__stopTriggerLevel)
-        self.__stopTriggerLevel
-        if(np.any(test)):
-            self.__stopTriggerSet = True
+        if(self.__stopTriggerLevel is not triggers.SAMPLECOUNT_INFINITE):
+            test = self.__stopTriggerStyle(measurement,self.__stopTriggerLevel)
+            if(np.any(test)):
+                self.__stopTriggerSet = True
 
     def __vectorProcess(self,measurements):
         """Translates raw ADC measurements into current values."""
