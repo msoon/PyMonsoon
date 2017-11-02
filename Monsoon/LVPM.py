@@ -3,10 +3,10 @@ import platform
 import usb.core
 import usb.util
 import struct
-import Operations as op
+from Monsoon import Operations as op
 
 import numpy as np
-import pmapi
+from Monsoon import pmapi
 
 
 
@@ -45,7 +45,7 @@ class Monsoon(object):
 
     def __raw_from_amps(self,amps):
         """Translate amp setting for overcurrent protection into EEPROM value"""
-        result = 1023 * (1.0 - (value/8.0))
+        result = 1023 * (1.0 - (amps/8.0))
         return result
 
 
@@ -90,7 +90,10 @@ class Monsoon(object):
         """Get the device serial number"""
         serialNumber = self.Protocol.getValue(op.OpCodes.getSerialNumber,2)
         return serialNumber
-
+    def setDefaultScaleValues(self):
+        """Not implemented for LVPM yet"""
+        raise NotImplementedError
+        
     def fillStatusPacket(self):
         """Get all calibration information from the device EEPROM"""
         self.statusPacket.mainFineResistorOffset = float(self.Protocol.getValue(op.OpCodes.setMainFineResistorOffset,1))
