@@ -44,9 +44,7 @@ void LVPM::Start(int calTime, int maxTime)
 
 void LVPM::Stop()
 {
-	signalLock.lock();
 	running = false;
-	signalLock.unlock();
 	stopSampling(handle);
 	swizzleThread.join();
 	processThread.join();
