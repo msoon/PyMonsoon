@@ -1,13 +1,14 @@
-#pragma once
 #include "stdafx.h"
 #include "Operations.h"
 #include <future>
 #include <iostream>
 #include <thread>
+#include <stdio.h>
 
-LVPM::LVPM()
+
+LVPM::LVPM() noexcept
 {
-
+	handle =NULL;
 	for (int i = 0; i < QueueSize; i++)
 	{
 		Packets[i] = 0;
@@ -43,8 +44,10 @@ void LVPM::Start(int calTime, int maxTime)
 
 void LVPM::Stop()
 {
-	stopSampling(handle);
+	signalLock.lock();
 	running = false;
+	signalLock.unlock();
+	stopSampling(handle);
 	swizzleThread.join();
 	processThread.join();
 }
@@ -60,15 +63,15 @@ void LVPM::getCalValues()
 	mainCoarseScale = 3103.4 * (factoryResistor / mainCoarseResistor);
 }
 
-void LVPM::SwizzlePackets(UCHAR* Packets, int numPackets)
+void LVPM::SwizzlePackets(unsigned char* Packets, int numPackets)
 {
 	int offset = 0;
 
 	for (int i = 0; i < numPackets; i++)
 	{
-		std::vector<UCHAR> Packet;
+		std::vector<unsigned char> Packet;
 
-		int packetStart = i * packetLength;
+		unsigned char packetStart = i * packetLength;
 		Packet.push_back(Packets[packetStart]);
 		Packet.push_back(Packets[packetStart + 1]);
 		Packet.push_back(Packets[packetStart + 2]);
@@ -100,7 +103,7 @@ void LVPM::ProcessPackets()
 		if (!ProcessQueue.empty())
 		{
 			QueueAccess.lock();
-			std::vector<UCHAR> Packet = ProcessQueue.front();
+			std::vector<unsigned char> Packet = ProcessQueue.front();
 			ProcessQueue.pop();
 			QueueAccess.unlock();
 			int offset = 0;
@@ -126,7 +129,7 @@ void LVPM::ProcessPackets()
 				offset += 10; //Skipping USB and Aux channels for now
 				short mainVoltage = ((Packet[offset + 1] << 8) | Packet[offset]);
 				offset += 4; //Skipping over USB voltage, Main Gain.
-				UCHAR PacketType = Packet[offset] & 0x30;
+				unsigned char PacketType = Packet[offset] & 0x30;
 				offset += 2;
 
 				float slope = 0;
@@ -174,8 +177,9 @@ void LVPM::ProcessPackets()
 						{
 							printf("Current: %4.2f Voltage: %4.2f Dropped: %d Total Samples: %d \n", Current, voltage, dropped, totalSampleCount);
 						}
-					}
 
+					}
+					break;
 				default:
 
 					break;

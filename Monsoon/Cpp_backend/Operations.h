@@ -1,5 +1,5 @@
 #pragma once
 //Operations
 
-UCHAR setMainFineResistorOffset = 0x02;
-UCHAR setMainCoarseResistorOffset = 0x11;
+unsigned char setMainFineResistorOffset = 0x02;
+unsigned char setMainCoarseResistorOffset = 0x11;

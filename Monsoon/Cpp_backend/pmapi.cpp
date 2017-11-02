@@ -6,13 +6,14 @@
 #include <iostream>
 #include <thread>
 #include <string>
+#include <libusb.h>
 
 using namespace std;
 static const int QueueSize = 64000; //10,000 packet buffer, approximately 2-6 seconds worth of samples.
 static const int packetLength = 64; //per firmware spec.
-volatile bool running;
+std::atomic<bool> running;
 unsigned char Queue[QueueSize];
-std::vector<UCHAR> processingQueue[QueueSize];
+std::vector<unsigned char> processingQueue[QueueSize];
 int queueIndex = 0;
 int readIndex = 0;
 thread sampleThread;
@@ -20,7 +21,7 @@ thread sampleThread;
 
 //Python test
 static const int pyQueueSize = 64000;
-UCHAR g_packets[pyQueueSize];
+unsigned char g_packets[pyQueueSize];
 libusb_device_handle* g_handle;
 int g_count = 0;
 void pySetup(int VID, int PID, int serialno)
@@ -47,7 +48,7 @@ void pyStop()
 	stopSampling(g_handle);
 }
 
-UCHAR* pyGetBulkData(int num_numbers, UCHAR *packets)
+unsigned char* pyGetBulkData(int num_numbers, unsigned char *packets)
 {
 	g_count = getSamples(packets, num_numbers);
 	return packets;
@@ -85,7 +86,7 @@ void stopSampling(libusb_device_handle* handle)
 	sampleThread.join();
 }
 
-int getSamples(UCHAR* processingQueue, int maxTransfer)
+int getSamples(unsigned char* processingQueue, int maxTransfer)
 {
 	int count = 0;
 	int numPackets = 0;
@@ -202,7 +203,7 @@ void getBulkData(libusb_device_handle* handle)
 {
 	init();
 	int lengthTransferred = 0;
-	unsigned char test = 0;
+
 	while (running)
 	{
 		libusb_bulk_transfer(

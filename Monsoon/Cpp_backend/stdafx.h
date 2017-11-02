@@ -12,11 +12,11 @@
 #include <Python.h>
 #endif
 
-#include <tchar.h>
+
 #include "stdafx.h"
 #include<mutex>
+#include<atomic>
 
-#include <tchar.h>
 #include "stdafx.h"
 #include <vector>
 #include <vector>
@@ -31,20 +31,23 @@ using namespace std;
 
 //Python test objects
 
-typedef struct measurements measurements;
-struct measurements {
-	int numSamples;
-	UCHAR* samples;
-};
+/*
 
 extern "C" __declspec(dllimport) void __cdecl pySetup(int VID, int PID, int serialno=NULL);
 extern "C" __declspec(dllimport) void __cdecl pyClose();
 extern "C" __declspec(dllimport) void __cdecl pyStart(int calTime, int maxTime);
 extern "C" __declspec(dllimport) void __cdecl pyStop();
-extern "C" __declspec(dllimport) UCHAR*  __cdecl pyGetBulkData(int num_numbers, UCHAR *numbers);
+extern "C" __declspec(dllimport) unsigned char*  __cdecl pyGetBulkData(int num_numbers, unsigned char *numbers);
 extern "C" __declspec(dllimport) int  __cdecl pyQueueCount();
 extern "C" __declspec(dllimport) void  __cdecl pySendCommand(unsigned char operation, int value);
 extern "C" __declspec(dllimport) int  __cdecl pyGetValue(unsigned char operation, int length);
+*/
+typedef struct measurements measurements;
+struct measurements {
+	int numSamples;
+	unsigned char* samples;
+};
+
 
 // TODO: reference additional headers your program requires here
 std::vector<unsigned char> intToBytes(int paramInt);
@@ -56,7 +59,7 @@ void startSampling(libusb_device_handle* handle, int calTime, int maxTime);
 void stopSampling(libusb_device_handle* handle);
 void init();
 void getBulkData(libusb_device_handle* handle);
-int getSamples(UCHAR* processingQueue, int maxTransfer);
+int getSamples(unsigned char* processingQueue, int maxTransfer);
 
 
 
@@ -68,10 +71,10 @@ private:
 	int VendorID = 0x2AB9;
 	int ProductID = 0x0001;
 	static const int packetLength = 64; //per firmware spec.
-	std::queue<std::vector<UCHAR>> ProcessQueue;
-	bool running = false;
+	std::queue<std::vector<unsigned char>> ProcessQueue;
+	std::atomic<bool> running;
 	static const int QueueSize = 64000;
-	UCHAR Packets[QueueSize]; //Space for up to 1000 packets.
+	unsigned char Packets[QueueSize]; //Space for up to 1000 packets.
 	thread swizzleThread;
 	thread processThread;
 	//Calibration information
@@ -91,13 +94,13 @@ private:
 	int totalSampleCount = 0;
 
 public:
-	LVPM();
+	LVPM() noexcept;
 	void setup_usb(int serialno=NULL);
 	void setVout(float value);
 	void Close();
 	void Start(int calTime, int maxTime);
 	void Stop();
-	void SwizzlePackets(UCHAR* Packets, int numPackets);
+	void SwizzlePackets(unsigned char* Packets, int numPackets);
 	void ProcessPackets();
 	void getCalValues();
 	bool Calibrated();
