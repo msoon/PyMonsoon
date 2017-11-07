@@ -378,7 +378,7 @@ class SampleEngine:
 
     def getSamples(self):
         """Returns samples in a Python list.  Format is [timestamp, main, usb, aux, mainVolts,usbVolts].  Only includes enabled channels."""
-        result = self.__arrangeSamples()
+        result = self.__arrangeSamples(True)
         return result
 
     def __outputToCSV(self):
@@ -394,7 +394,7 @@ class SampleEngine:
             sOut = sOut + "\n"
             self.__f.write(sOut)
 
-    def __arrangeSamples(self):
+    def __arrangeSamples(self, exportAllIndices = False):
         """Arranges output lists so they're a bit easier to process."""
         output = []
         times = []
@@ -403,35 +403,35 @@ class SampleEngine:
                 times.append(measurement)
         output.append(times)
         self.__timeStamps = []
-        if(self.__channels[channels.MainCurrent]):
+        if(self.__channels[channels.MainCurrent] or exportAllIndices):
             main = []
             for data in self.__mainCurrent:
                 for measurement in data:
                     main.append(measurement)
             output.append(main)
             self.__mainCurrent = []
-        if(self.__channels[channels.USBCurrent]):
+        if(self.__channels[channels.USBCurrent]or exportAllIndices):
             usb = []
             for data in self.__usbCurrent:
                 for measurement in data:
                     usb.append(measurement)
             output.append(usb)
             self.__usbCurrent = []
-        if(self.__channels[channels.AuxCurrent]):
+        if(self.__channels[channels.AuxCurrent]or exportAllIndices):
             Aux = []
             for data in self.__auxCurrent:
                 for measurement in data:
                     Aux.append(measurement)
             output.append(Aux)
             self.__auxCurrent = []
-        if(self.__channels[channels.MainVoltage]):
+        if(self.__channels[channels.MainVoltage]or exportAllIndices):
             volts = []
             for data in self.__mainVoltage:
                 for measurement in data:
                     volts.append(measurement)
             output.append(volts)
             self.__mainVoltage = []
-        if(self.__channels[channels.USBVoltage]):
+        if(self.__channels[channels.USBVoltage]or exportAllIndices):
             volts = []
             for data in self.__usbVoltage:
                 for measurement in data:
