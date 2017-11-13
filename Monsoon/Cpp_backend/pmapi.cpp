@@ -7,9 +7,11 @@
 #include <thread>
 #include <string>
 #include <libusb.h>
+#include<sys/resource.h>
+
 
 using namespace std;
-static const int QueueSize = 64000; //10,000 packet buffer, approximately 2-6 seconds worth of samples.
+static const int QueueSize = 6400; //10,000 packet buffer, approximately 2-6 seconds worth of samples.
 static const int packetLength = 64; //per firmware spec.
 std::atomic<bool> running;
 unsigned char Queue[QueueSize];
@@ -20,7 +22,7 @@ thread sampleThread;
 
 
 //Python test
-static const int pyQueueSize = 64000;
+static const int pyQueueSize = 6400;
 unsigned char g_packets[pyQueueSize];
 libusb_device_handle* g_handle;
 int g_count = 0;

@@ -31,17 +31,15 @@ using namespace std;
 
 //Python test objects
 
-/*
+extern "C" void  pySetup(int VID, int PID, int serialno=NULL);
+extern "C" void  pyClose();
+extern "C"  void  pyStart(int calTime, int maxTime);
+extern "C" void  pyStop();
+extern "C" unsigned char*   pyGetBulkData(int num_numbers, unsigned char *numbers);
+extern "C"  int   pyQueueCount();
+extern "C"  void   pySendCommand(unsigned char operation, int value);
+extern "C"  int   pyGetValue(unsigned char operation, int length);
 
-extern "C" __declspec(dllimport) void __cdecl pySetup(int VID, int PID, int serialno=NULL);
-extern "C" __declspec(dllimport) void __cdecl pyClose();
-extern "C" __declspec(dllimport) void __cdecl pyStart(int calTime, int maxTime);
-extern "C" __declspec(dllimport) void __cdecl pyStop();
-extern "C" __declspec(dllimport) unsigned char*  __cdecl pyGetBulkData(int num_numbers, unsigned char *numbers);
-extern "C" __declspec(dllimport) int  __cdecl pyQueueCount();
-extern "C" __declspec(dllimport) void  __cdecl pySendCommand(unsigned char operation, int value);
-extern "C" __declspec(dllimport) int  __cdecl pyGetValue(unsigned char operation, int length);
-*/
 typedef struct measurements measurements;
 struct measurements {
 	int numSamples;
@@ -73,7 +71,7 @@ private:
 	static const int packetLength = 64; //per firmware spec.
 	std::queue<std::vector<unsigned char>> ProcessQueue;
 	std::atomic<bool> running;
-	static const int QueueSize = 64000;
+	static const int QueueSize = 6400;
 	unsigned char Packets[QueueSize]; //Space for up to 1000 packets.
 	thread swizzleThread;
 	thread processThread;
