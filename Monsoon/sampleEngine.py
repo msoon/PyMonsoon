@@ -176,20 +176,19 @@ class SampleEngine:
         if(channel == self.__triggerChannel and not self.__startTriggerSet):
             self.__evalStartTrigger(measurement)
         elif(channel == self.__triggerChannel):
-            self.__evalStopTrigger(measurement)
-
+            self.__evalStopTrigger(measurement[::self.__granularity])
         if(channel == channels.MainCurrent):
-            self.__mainCurrent.append(measurement)
+            self.__mainCurrent.append(measurement[::self.__granularity])
         if(channel == channels.USBCurrent):
-            self.__usbCurrent.append(measurement)
+            self.__usbCurrent.append(measurement[::self.__granularity])
         if(channel == channels.AuxCurrent):
-            self.__auxCurrent.append(measurement)
+            self.__auxCurrent.append(measurement[::self.__granularity])
         if(channel == channels.USBVoltage):
-            self.__usbVoltage.append(measurement)
+            self.__usbVoltage.append(measurement[::self.__granularity])
         if(channel == channels.MainVoltage):
-            self.__mainVoltage.append(measurement)
+            self.__mainVoltage.append(measurement[::self.__granularity])
         if(channel == channels.timeStamp):
-            self.__timeStamps.append(measurement)
+            self.__timeStamps.append(measurement[::self.__granularity])
 
     def __evalStartTrigger(self, measurement):
         self.__startTriggerStyle(measurement,self.__startTriggerLevel)
@@ -378,7 +377,7 @@ class SampleEngine:
 
     def getSamples(self):
         """Returns samples in a Python list.  Format is [timestamp, main, usb, aux, mainVolts,usbVolts].  Only includes enabled channels."""
-        result = self.__arrangeSamples()
+        result = self.__arrangeSamples(True)
         return result
 
     def __outputToCSV(self):
@@ -394,7 +393,7 @@ class SampleEngine:
             sOut = sOut + "\n"
             self.__f.write(sOut)
 
-    def __arrangeSamples(self):
+    def __arrangeSamples(self, exportAllIndices = False):
         """Arranges output lists so they're a bit easier to process."""
         output = []
         times = []
@@ -403,35 +402,35 @@ class SampleEngine:
                 times.append(measurement)
         output.append(times)
         self.__timeStamps = []
-        if(self.__channels[channels.MainCurrent]):
+        if(self.__channels[channels.MainCurrent] or exportAllIndices):
             main = []
             for data in self.__mainCurrent:
                 for measurement in data:
                     main.append(measurement)
             output.append(main)
             self.__mainCurrent = []
-        if(self.__channels[channels.USBCurrent]):
+        if(self.__channels[channels.USBCurrent]or exportAllIndices):
             usb = []
             for data in self.__usbCurrent:
                 for measurement in data:
                     usb.append(measurement)
             output.append(usb)
             self.__usbCurrent = []
-        if(self.__channels[channels.AuxCurrent]):
+        if(self.__channels[channels.AuxCurrent]or exportAllIndices):
             Aux = []
             for data in self.__auxCurrent:
                 for measurement in data:
                     Aux.append(measurement)
             output.append(Aux)
             self.__auxCurrent = []
-        if(self.__channels[channels.MainVoltage]):
+        if(self.__channels[channels.MainVoltage]or exportAllIndices):
             volts = []
             for data in self.__mainVoltage:
                 for measurement in data:
                     volts.append(measurement)
             output.append(volts)
             self.__mainVoltage = []
-        if(self.__channels[channels.USBVoltage]):
+        if(self.__channels[channels.USBVoltage]or exportAllIndices):
             volts = []
             for data in self.__usbVoltage:
                 for measurement in data:
@@ -450,36 +449,38 @@ class SampleEngine:
         """granularity: Controls the resolution at which samples are stored.  1 = all samples stored, 10 = 1 out of 10 samples stored, etc."""
         self.__Reset()
         self.__sampleLimit = samples
-        self.monsoon.StartSampling(1250,0xFFFFFFFF)
+        self.__granularity = granularity
+        self.__granCount = 1
         Samples = [[0 for _ in range(self.__packetSize+1)] for _ in range(self.bulkProcessRate)]
         S = 0
         debugcount = 0
         minutes = 0
         granularity_index = 0
+        csvOutRateLimit = True
+        csvOutThreshold = self.bulkProcessRate/2
         self.__startTime = time.time()
         if not self.__startupCheck():
             return False
         if(self.__CSVOutEnable):
             self.__outputCSVHeaders()
+        self.monsoon.StartSampling(1250,0xFFFFFFFF)
         while not self.__stopTriggerSet:
             buf = self.monsoon.BulkRead()
             Sample = self.monsoon.swizzlePacket(buf)
             numSamples = Sample[2]
-            granularity_index += numSamples
             self.__sampleCount += numSamples
-            #TODO:  Move granularity logic to addMeasurement.
-            if(granularity_index >= granularity):
-                granularity_index = 0
-                Sample.append(time.time() - self.__startTime)
-                Samples[S] = Sample
-                S += 1
-                if(S >= self.bulkProcessRate):
-                    bulkPackets = self.__processPacket(Samples)
-                    if(len(bulkPackets) > 0):
-                        self.__vectorProcess(bulkPackets)
-                    S = 0
-                if(S % self.bulkProcessRate/2 == 0 and self.__CSVOutEnable and self.__startTriggerSet):
-                    self.__outputToCSV()
+            Sample.append(time.time() - self.__startTime)
+            Samples[S] = Sample
+            S += numSamples
+            if(S >= self.bulkProcessRate):
+                bulkPackets = self.__processPacket(Samples)
+                if(len(bulkPackets) > 0):
+                    self.__vectorProcess(bulkPackets)
+                S = 0
+                csvOutRateLimit = True
+            if(S >= csvOutThreshold and csvOutRateLimit and self.__CSVOutEnable and self.__startTriggerSet):
+                self.__outputToCSV()
+                csvOutRateLimit = False
         self.monsoon.stopSampling()
         if(self.__CSVOutEnable):
             self.__outputToCSV()
