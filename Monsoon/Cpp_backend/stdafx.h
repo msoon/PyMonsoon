@@ -30,8 +30,17 @@
 using namespace std;
 
 //Python test objects
-
-extern "C" void  pySetup(int VID, int PID, int serialno=NULL);
+#ifdef _WIN32_
+extern "C" __declspec(dllexport)  void __cdecl pySetup(int VID, int PID, int serialno=NULL);
+extern "C" __declspec(dllexport)  void __cdecl  pyClose();
+extern "C" __declspec(dllexport)  void __cdecl  pyStart(int calTime, int maxTime);
+extern "C" __declspec(dllexport)  void __cdecl  pyStop();
+extern "C" __declspec(dllexport)  unsigned char* _cdecl   pyGetBulkData(int num_numbers, unsigned char *numbers);
+extern "C" __declspec(dllexport)  int __cdecl   pyQueueCount();
+extern "C" __declspec(dllexport)  void __cdecl   pySendCommand(unsigned char operation, int value);
+extern "C" __declspec(dllexport)  int __cdecl   pyGetValue(unsigned char operation, int length);
+#elif __linux__
+extern "C" void  pySetup(int VID, int PID, int serialno = NULL);
 extern "C" void  pyClose();
 extern "C"  void  pyStart(int calTime, int maxTime);
 extern "C" void  pyStop();
@@ -39,6 +48,17 @@ extern "C" unsigned char*   pyGetBulkData(int num_numbers, unsigned char *number
 extern "C"  int   pyQueueCount();
 extern "C"  void   pySendCommand(unsigned char operation, int value);
 extern "C"  int   pyGetValue(unsigned char operation, int length);
+#else
+extern "C" __declspec(dllexport)  void __cdecl pySetup(int VID, int PID, int serialno = NULL);
+extern "C" __declspec(dllexport)  void __cdecl  pyClose();
+extern "C" __declspec(dllexport)  void __cdecl  pyStart(int calTime, int maxTime);
+extern "C" __declspec(dllexport)  void __cdecl  pyStop();
+extern "C" __declspec(dllexport)  unsigned char* _cdecl   pyGetBulkData(int num_numbers, unsigned char *numbers);
+extern "C" __declspec(dllexport)  int __cdecl   pyQueueCount();
+extern "C" __declspec(dllexport)  void __cdecl   pySendCommand(unsigned char operation, int value);
+extern "C" __declspec(dllexport)  int __cdecl   pyGetValue(unsigned char operation, int length);
+#endif
+
 
 typedef struct measurements measurements;
 struct measurements {

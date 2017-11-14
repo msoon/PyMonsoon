@@ -108,8 +108,8 @@ class CPP_Backend_Protocol(object):
         self.DEVICE.pySendCommand.argtypes = (ctypes.c_ubyte, ctypes.c_int)
         self.DEVICE.pyGetValue.argtypes = (ctypes.c_ubyte,ctypes.c_int)
         self.queueSize = 1024
-        self.Queue = [0 for x in range(self.queueSize)]
-        self.array_type = ctypes.c_uint8 * self.queueSize
+        self.Queue = (ctypes.c_uint8*self.queueSize)()
+        ctypes.cast(self.Queue,ctypes.POINTER(ctypes.c_uint8))
 
     def Connect(self,deviceType, serialno=None):
         VID = 0x2AB9
@@ -118,10 +118,9 @@ class CPP_Backend_Protocol(object):
         pass
 
     def BulkRead(self):
-        array_pointer = ctypes.cast(self.DEVICE.pyGetBulkData(self.queueSize,self.array_type(*self.Queue)),ctypes.POINTER(self.array_type))
-        packets = np.array(array_pointer.contents)
+        self.DEVICE.pyGetBulkData(self.queueSize,self.Queue)
         count = self.DEVICE.pyQueueCount()
-        result = packets[0:count*64]
+        result = self.Queue[0:count*64]
         return result
 
 
