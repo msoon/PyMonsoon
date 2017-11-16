@@ -19,13 +19,13 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # http://packaging.python.org/en/latest/tutorial.html#version
-    version='0.1.65',
+    version='0.1.69',
 
     description='Monsoon Power Monitor API',
     long_description=long_description,
 
     # The project's main homepage.
-    url='https://www.msoon.com/LabEquipment/PowerMonitor/',
+    url='https://github.com/msoon/PyMonsoon',
 
     # Author details
     author='Michael Brinker',
@@ -72,12 +72,12 @@ setup(
     # installed in site-packages, specify them here.  If using Python 2.6 or less, then these
     # have to be included in MANIFEST.in as well.
     # include_package_data=True,
-    # # relative to the vfclust directory
+    # 
      package_data={
          'examples':
-              ['examples/SimpleSamplingExample.py',
-               'examples/ReflashExample.py',
-			   'examples/LVPM_RevE_Prot_1_Ver25_beta.fwm'
+              ['examples/ExampleSolution/SimpleSamplingExample.py',
+               'examples/ExampleSolution/ReflashExample.py',
+			   'examples/ExampleSolution/multiPMExample.py'
               ],
          'docs':
              ['docs/API.pdf',
@@ -96,8 +96,21 @@ setup(
 		 'docs/Drivers/HVPM/WdfCoinstaller01011.dll',
 		 'docs/Drivers/HVPM/winusbcoinstaller2.dll'
 		 ]
-		 
-		 
      },
+	 
+	 data_files=[('Monsoon\\Compiled\\WIN32',
+	 ['Monsoon\\Compiled\\WIN32\\Cpp_backend.dll']),
+	 ('Monsoon\\Compiled\\Linux',['Monsoon\\Compiled\\Linux\\libcpp_backend.so']),
+	 #TODO: Create OS-neutral makefile to compile source code at the time of installation.
+	 ('Monsoon\\src',
+	 ['Monsoon\\Cpp_backend\\Cpp_backend.cpp',
+	 'Monsoon\\Cpp_backend\\LVPM.cpp',
+	 'Monsoon\\Cpp_backend\\pmapi.cpp',
+	 'Monsoon\\Cpp_backend\\stdafx.cpp',
+	 'Monsoon\\Cpp_backend\\Operations.h',
+	 'Monsoon\\Cpp_backend\\stdafx.h',
+	 'Monsoon\\Cpp_backend\\targetver.h'])
+	 ]
+	 
 
 )

@@ -7,13 +7,12 @@
 #include <thread>
 #include <string>
 #include <libusb.h>
-#include<sys/resource.h>
 
 
 using namespace std;
-static const int QueueSize = 6400; //10,000 packet buffer, approximately 2-6 seconds worth of samples.
-static const int packetLength = 64; //per firmware spec.
+static const int packetLength = LVPM::packetLength; //per firmware spec.
 std::atomic<bool> running;
+static const int QueueSize = LVPM::QueueSize;//Space for up to 1000 packets.
 unsigned char Queue[QueueSize];
 std::vector<unsigned char> processingQueue[QueueSize];
 int queueIndex = 0;
@@ -22,8 +21,7 @@ thread sampleThread;
 
 
 //Python test
-static const int pyQueueSize = 6400;
-unsigned char g_packets[pyQueueSize];
+unsigned char g_packets[QueueSize];
 libusb_device_handle* g_handle;
 int g_count = 0;
 void pySetup(int VID, int PID, int serialno)
@@ -116,16 +114,7 @@ int getSamples(unsigned char* processingQueue, int maxTransfer)
 	{
 		readIndex = 0;
 	}
-	/*
-	std::cout <<"Number of packets in Queue: ";
-	std::cout << queueIndex /64;
-	std::cout << "\n";
-	std::cout << "Number of packets read: ";
-	std::cout << readIndex/64;
-	std::cout << "\n";
-	*/
 	return numPackets;
-
 }
 
 void startSampling(libusb_device_handle* handle, int calTime, int maxTime)

@@ -17,7 +17,6 @@
 #include<mutex>
 #include<atomic>
 
-#include "stdafx.h"
 #include <vector>
 #include <vector>
 #include <libusb.h>
@@ -30,7 +29,7 @@
 using namespace std;
 
 //Python test objects
-#ifdef _WIN32_
+#ifdef WIN32
 extern "C" __declspec(dllexport)  void __cdecl pySetup(int VID, int PID, int serialno=NULL);
 extern "C" __declspec(dllexport)  void __cdecl  pyClose();
 extern "C" __declspec(dllexport)  void __cdecl  pyStart(int calTime, int maxTime);
@@ -48,15 +47,6 @@ extern "C" unsigned char*   pyGetBulkData(int num_numbers, unsigned char *number
 extern "C"  int   pyQueueCount();
 extern "C"  void   pySendCommand(unsigned char operation, int value);
 extern "C"  int   pyGetValue(unsigned char operation, int length);
-#else
-extern "C" __declspec(dllexport)  void __cdecl pySetup(int VID, int PID, int serialno = NULL);
-extern "C" __declspec(dllexport)  void __cdecl  pyClose();
-extern "C" __declspec(dllexport)  void __cdecl  pyStart(int calTime, int maxTime);
-extern "C" __declspec(dllexport)  void __cdecl  pyStop();
-extern "C" __declspec(dllexport)  unsigned char* _cdecl   pyGetBulkData(int num_numbers, unsigned char *numbers);
-extern "C" __declspec(dllexport)  int __cdecl   pyQueueCount();
-extern "C" __declspec(dllexport)  void __cdecl   pySendCommand(unsigned char operation, int value);
-extern "C" __declspec(dllexport)  int __cdecl   pyGetValue(unsigned char operation, int length);
 #endif
 
 
@@ -80,7 +70,6 @@ void getBulkData(libusb_device_handle* handle);
 int getSamples(unsigned char* processingQueue, int maxTransfer);
 
 
-
 class LVPM
 {
 private:
@@ -88,20 +77,19 @@ private:
 	libusb_device_handle* handle;
 	int VendorID = 0x2AB9;
 	int ProductID = 0x0001;
-	static const int packetLength = 64; //per firmware spec.
+
 	std::queue<std::vector<unsigned char>> ProcessQueue;
 	std::atomic<bool> running;
-	static const int QueueSize = 6400;
-	unsigned char Packets[QueueSize]; //Space for up to 1000 packets.
+
 	thread swizzleThread;
 	thread processThread;
 	//Calibration information
-	float mainFineScale = 35946.0;
-	float mainCoarseScale = 3103.4;
+	double mainFineScale = 35946.0;
+	double mainCoarseScale = 3103.4;
 
-	float mainFineResistor = 0.050;
-	float mainCoarseResistor = 0.050;
-	float factoryResistor = 0.050;
+	double mainFineResistor = 0.050;
+	double mainCoarseResistor = 0.050;
+	double factoryResistor = 0.050;
 
 	//TODO:  Create a data structure that records the last x Cal values and averages them.
 	int mainFineRefCal = 0;
@@ -112,9 +100,12 @@ private:
 	int totalSampleCount = 0;
 
 public:
+	static const int packetLength = 64; //per firmware spec.
+	static const int QueueSize = 64000;//Space for up to 1000 packets.
+	unsigned char Packets[QueueSize];
 	LVPM() noexcept;
 	void setup_usb(int serialno=NULL);
-	void setVout(float value);
+	void setVout(double value);
 	void Close();
 	void Start(int calTime, int maxTime);
 	void Stop();

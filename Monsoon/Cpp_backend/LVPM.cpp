@@ -20,7 +20,7 @@ void LVPM::setup_usb(int serialno)
 	handle = openDevice(VendorID, ProductID,serialno);
 }
 
-void LVPM::setVout(float value)
+void LVPM::setVout(double value)
 {
 	int conversion = 1048576 * value;
 	unsigned char opcode = 0x41;
@@ -116,10 +116,10 @@ void LVPM::ProcessPackets()
 				totalSampleCount++;
 				bool Coarse = false;
 				short Raw = 0;
-				float res = mainFineResistor;
-				float CalRef = mainFineRefCal;
-				float CalZero = mainFineZeroCal;
-				float scale = mainFineScale;
+				double res = mainFineResistor;
+				double CalRef = mainFineRefCal;
+				double CalZero = mainFineZeroCal;
+				double scale = mainFineScale;
 
 				short mainCoarse = ((Packet[offset + 1] << 8) | Packet[offset]);
 				offset += 2;

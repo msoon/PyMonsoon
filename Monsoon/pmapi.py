@@ -5,10 +5,12 @@ import platform
 import usb.core
 import usb.util
 import numpy as np
-
+import os
+import platform
 
 class USB_protocol(object):
-    """Currently the only officially supported protocol."""
+    """Uses native python usb functions to communicate with the Power Monitor.
+    Best choice for connecting to a single Power Monitor."""
     def __init__(self):
         self.DEVICE = None
 
@@ -95,13 +97,12 @@ class USB_protocol(object):
         pass
 
 class CPP_Backend_Protocol(object):
-    """Uses C++ driver to collect bulk samples.
-    Currently considered experimental.
-    This sometimes results in slower processing, but guarantees fewer dropped samples
-    If used, we recommend"""
+    """Uses C++ backend with libusb.
+    When connecting to multiple Power Monitors with the same computer, native Python code is often too slow, and results in many dropped samples.
+    This offloads the the time-critical parts of sample collection to C++, but isn't compatible with every OS yet.
+    """
     def __init__(self):
-
-        self.DEVICE = ctypes.CDLL("Win32_Backend\Cpp_backend.dll")
+        self.DEVICE = self.loadLibrary()
         self.DEVICE.pySetup.argtypes = (ctypes.c_int, ctypes.c_int,ctypes.c_int)
         self.DEVICE.pyStart.argtypes = (ctypes.c_int,ctypes.c_int)
         self.DEVICE.pyGetBulkData.argtypes = (ctypes.c_int, ctypes.POINTER(ctypes.c_uint8))
@@ -123,11 +124,9 @@ class CPP_Backend_Protocol(object):
         result = self.Queue[0:count*64]
         return result
 
-
     def sendCommand(self,operation, value):
         """Send a USB Control transfer.  Normally this is used to set an EEPROM value."""
         self.DEVICE.pySendCommand(operation,int(value))
-       
 
     def stopSampling(self):
         """Send a control transfer instructing the Power Monitor to stop sampling."""
@@ -147,3 +146,20 @@ class CPP_Backend_Protocol(object):
         """Cleanup any loose ends, if present."""
         self.DEVICE.pyClose();
         pass
+
+    def loadLibrary(self):
+        """Tries to load the library in an OS-neutral way."""
+        #TODO:  Currently we're distributing pre-compiled .dll and .so files.
+        #The proper way to do this will be including a makefile and compiling these libraries on installation.
+        path = os.path.abspath(__file__)
+        path = os.path.realpath(path)
+        path = os.path.dirname(path)
+
+        if(platform.system() is "Linux"):
+            libLocation=os.path.join(path,"Compiled//Linux//Cpp_backend.so")
+        elif(platform.system() is "Windows"):
+            libLocation = os.path.join(path,"Compiled//WIN32//Cpp_backend.dll")
+        else:
+            raise NotImplementedError("OS not currently supported.")
+        test = ctypes.CDLL(libLocation)
+        return test

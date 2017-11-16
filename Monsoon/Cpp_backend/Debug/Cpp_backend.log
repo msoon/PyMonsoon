@@ -1,3 +1,0 @@
-﻿  Cpp_backend.cpp
-c:\pymonsoon\monsoon\cpp_backend\cpp_backend.cpp(8): warning C4305: 'argument': truncation from 'double' to 'float'
-  Cpp_backend.vcxproj -> C:\PyMonsoon\Monsoon\Cpp_backend\Debug\Cpp_backend.exe
