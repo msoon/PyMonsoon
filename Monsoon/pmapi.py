@@ -154,9 +154,8 @@ class CPP_Backend_Protocol(object):
         path = os.path.abspath(__file__)
         path = os.path.realpath(path)
         path = os.path.dirname(path)
-
-        if(platform.system() is "Linux"):
-            libLocation=os.path.join(path,"Compiled//Linux//Cpp_backend.so")
+        if(platform.system() == "Linux"):
+            libLocation=os.path.join(path,"Compiled/Linux/libcpp_backend.so")
         elif(platform.system() is "Windows"):
             libLocation = os.path.join(path,"Compiled//WIN32//Cpp_backend.dll")
         else:
