@@ -3,7 +3,7 @@ from Monsoon import sampleEngine
 from Monsoon import Operations as op
 from Monsoon import HVPM
 from Monsoon import pmapi
-
+from multiprocessing import Process
 
 def testHVPM(serialno=None,Protocol=pmapi.USB_protocol()):
     HVMON = HVPM.Monsoon()
@@ -69,6 +69,33 @@ def testLVPM(serialno=None,Protcol=pmapi.USB_protocol()):
     engine.startSampling(5000)
     samples = engine.getSamples()
     Mon.closeDevice();
-    
-testLVPM(60001,pmapi.USB_protocol())
-testHVPM(60000,pmapi.CPP_Backend_Protocol())
+
+
+def droppedSamplesTest(ser=None,Prot=pmapi.USB_protocol()):
+    Mon = HVPM.Monsoon()
+    Mon.setup_usb(ser,Prot)
+    Mon.setVout(4.0)
+    engine = sampleEngine.SampleEngine(Mon)
+    #engine.enableCSVOutput(repr(ser) + ".csv")
+    engine.ConsoleOutput(False)
+    # test main channels
+    engine.enableChannel(sampleEngine.channels.MainCurrent)
+    numSamples = 1000000  # Don't stop based on sample count, continue until the trigger conditions have been satisfied.
+    engine.setTriggerChannel(sampleEngine.channels.timeStamp)  # Start and stop judged by the timestamp channel.
+    engine.startSampling(numSamples)
+    samps = engine.getSamples()
+    sampleCount = len(samps[0])
+    print(repr(ser) + ": SampleCount: " + repr(sampleCount) + " Percent dropped: " + repr((engine.dropped/sampleCount)*100))
+
+def multiHVPMTest(serialnos):
+    for serial in serialnos:
+        p = Process(target=droppedSamplesTest,args=(serial,pmapi.CPP_Backend_Protocol()))
+        p.start()
+
+serialnos = [11500, 20019, 20486, 20487]
+multiHVPMTest(serialnos)
+
+
+#testLVPM(60001,pmapi.USB_protocol())
+#testHVPM(60000,pmapi.CPP_Backend_Protocol())
+
