@@ -505,9 +505,9 @@ class SampleEngine:
             self.disableCSVOutput()
         pass
 
-    def nonBlockingStartSampling(self):
+    def periodicStartSampling(self):
         """Causes the Power Monitor to enter sample mode, but doesn't actively collect samples.
-        Call collectSamples() periodically get measurements.
+        Call periodicCollectSamples() periodically get measurements.
         """
         self.__Reset()
         self.__sampleLimit = triggers.SAMPLECOUNT_INFINITE
@@ -522,15 +522,21 @@ class SampleEngine:
         return result
 
 
-    def collectSamples(self,samples=100):
+    def periodicCollectSamples(self,samples=100):
+        """Start sampling with periodicStartSampling(), then call this to collect samples.
+        Returns the most recent measurements made by the Power Monitor."""
+        #TODO:  This normally returns 3-5 samples over the requested number of samples.
         self.__sampleCount = 0
         self.__sampleLimit = samples
         self.__stopTriggerSet = False
-        self.monsoon.BulkRead() #Clears out stale buffer
+        self.monsoon.BulkRead() #Clear out stale buffer
         Samples = [[0 for _ in range(self.__packetSize+1)] for _ in range(1)]
         while not self.__stopTriggerSet:
             S = self.__sampleLoop(0,Samples,1)
+        if(self.__CSVOutEnable and self.__startTriggerSet):
+            self.__outputToCSV()
         result = self.getSamples()
+        self.disableCSVOutput()
         return result
 
 

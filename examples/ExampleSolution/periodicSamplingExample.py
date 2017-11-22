@@ -18,19 +18,19 @@ def main():
     HVengine = sampleEngine.SampleEngine(HVMON)
     HVengine.ConsoleOutput(False)
     #Puts the Power monitor in sample mode, and starts collecting samples automatically.
-    HVengine.nonBlockingStartSampling()
+    HVengine.periodicStartSampling()
     for i in range(5):
         #Collect the most recent 100 samples
-        samples = HVengine.collectSamples(100) 
+        samples = HVengine.periodicCollectSamples(100) 
         print("iteration " + repr(i) + " samples collected " + repr(len(samples[0])))
         time.sleep(1) 
     #In order to change parameters like voltage and USB passthrough mode, the unit needs to exit sample mode.
     HVMON.stopSampling()
     HVMON.setVout(4.5)
     #Restart tests after changing.
-    HVengine.nonBlockingStartSampling()
+    HVengine.periodicStartSampling()
     for i in range(5):
-        samples = HVengine.collectSamples(100) 
+        samples = HVengine.periodicCollectSamples(100) 
         print("iteration " + repr(i) + " samples collected " + repr(len(samples[0])))
         time.sleep(1) 
 
