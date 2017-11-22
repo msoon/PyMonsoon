@@ -10,7 +10,7 @@ Processing until complete.  This shows an alternative, manually collecting small
 at regular intervals."""
 
 def main():
-    HVMON = HVPM.Monsoon()
+    HVMON = LVPM.Monsoon()
     HVMON.setup_usb()
     print("HVPM Serial Number: " + repr(HVMON.getSerialNumber()))
     HVMON.fillStatusPacket()
@@ -25,7 +25,7 @@ def main():
         print("iteration " + repr(i) + " samples collected " + repr(len(samples[0])))
         time.sleep(1) 
     #In order to change parameters like voltage and USB passthrough mode, the unit needs to exit sample mode.
-    HVMON.stopSampling()
+    HVengine.periodicStopSampling()
     HVMON.setVout(4.5)
     #Restart tests after changing.
     HVengine.periodicStartSampling()

@@ -356,11 +356,11 @@ class SampleEngine:
             print("Verifying ready to start up")
             print("Calibrating...")
         Samples = [[0 for _ in range(self.__packetSize+1)] for _ in range(self.bulkProcessRate)]
-        while(not self.__isCalibrated() and self.__sampleCount < 10000):
+        while(not self.__isCalibrated() and self.__sampleCount < 20000):
             self.__sampleLoop(0,Samples,1)
         self.getSamples()
         if not self.__isCalibrated():
-            print("Connection error, failed to calibrate after 10,000 samples")
+            print("Connection error, failed to calibrate after 20,000 samples")
             return False
         if not self.__channels[self.__triggerChannel]:
             print("Error:  Trigger channel not enabled.")
@@ -534,10 +534,18 @@ class SampleEngine:
         while not self.__stopTriggerSet:
             S = self.__sampleLoop(0,Samples,1)
         if(self.__CSVOutEnable and self.__startTriggerSet):
-            self.__outputToCSV()
+            self.__outputToCSV() #Note that this will cause the script to return nothing.
         result = self.getSamples()
-        self.disableCSVOutput()
         return result
+
+    def periodicStopSampling(self, closeCSV=False):
+        """Performs cleanup tasks when finished sampling."""
+        if(self.__CSVOutEnable and self.__startTriggerSet):
+            self.__outputToCSV()
+            if(closeCSV):
+                self.disableCSVOutput()
+        self.monsoon.stopSampling()
+
 
 
 
