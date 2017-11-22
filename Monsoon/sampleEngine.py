@@ -512,6 +512,8 @@ class SampleEngine:
         self.__Reset()
         self.__sampleLimit = triggers.SAMPLECOUNT_INFINITE
         self.__granularity = 1
+        if(self.__CSVOutEnable):
+            self.__outputCSVHeaders()
         Samples = [[0 for _ in range(self.__packetSize+1)] for _ in range(self.bulkProcessRate)]
         self.__startTime = time.time()
         self.monsoon.StartSampling(1250,triggers.SAMPLECOUNT_INFINITE)
