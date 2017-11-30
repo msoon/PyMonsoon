@@ -19,7 +19,7 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # http://packaging.python.org/en/latest/tutorial.html#version
-    version='0.1.72',
+    version='0.1.73',
 
     description='Monsoon Power Monitor API',
     long_description=long_description,
@@ -98,18 +98,18 @@ setup(
 		 ]
      },
 	 
-	 data_files=[('Monsoon\\Compiled\\WIN32',
-	 ['Monsoon\\Compiled\\WIN32\\Cpp_backend.dll']),
-	 ('Monsoon\\Compiled\\Linux',['Monsoon\\Compiled\\Linux\\libcpp_backend.so']),
+	 data_files=[('Monsoon/Compiled/WIN32',
+	 ['Monsoon/Compiled/WIN32/Cpp_backend.dll']),
+	 ('Monsoon/Compiled/Linux',['Monsoon/Compiled/Linux/libcpp_backend.so']),
 	 #TODO: Create OS-neutral makefile to compile source code at the time of installation.
-	 ('Monsoon\\src',
-	 ['Monsoon\\Cpp_backend\\Cpp_backend.cpp',
-	 'Monsoon\\Cpp_backend\\LVPM.cpp',
-	 'Monsoon\\Cpp_backend\\pmapi.cpp',
-	 'Monsoon\\Cpp_backend\\stdafx.cpp',
-	 'Monsoon\\Cpp_backend\\Operations.h',
-	 'Monsoon\\Cpp_backend\\stdafx.h',
-	 'Monsoon\\Cpp_backend\\targetver.h'])
+	 #('Monsoon\\src',
+	 #['Monsoon\\Cpp_backend\\Cpp_backend.cpp',
+	 #'Monsoon\\Cpp_backend\\LVPM.cpp',
+	 #'Monsoon\\Cpp_backend\\pmapi.cpp',
+	 #'Monsoon\\Cpp_backend\\stdafx.cpp',
+	 #'Monsoon\\Cpp_backend\\Operations.h',
+	 #'Monsoon\\Cpp_backend\\stdafx.h',
+	 #'Monsoon\\Cpp_backend\\targetver.h'])
 	 ]
 	 
 
