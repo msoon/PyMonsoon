@@ -56,7 +56,7 @@ class USB_protocol(object):
                 usb.util.ENDPOINT_IN)
 
     def BulkRead(self):
-        return(self.DEVICE.read(0x81,64,timeout=0))
+        return(self.DEVICE.read(0x81,64,timeout=1000))
     def sendCommand(self,operation, value):
         """Send a USB Control transfer.  Normally this is used to set an EEPROM value."""
         try:

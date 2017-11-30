@@ -167,9 +167,9 @@ class SampleEngine:
         
     def __isCalibrated(self):
         """Returns true if every channel has sufficient calibration samples."""
-        A = self.__mainCal.calibrated
-        B = self.__usbCal.calibrated
-        C = self.__auxCal.calibrated
+        A = self.__mainCal.calibrated()
+        B = self.__usbCal.calibrated()
+        C = self.__auxCal.calibrated()
         return A and B and C
 
     def __addMeasurement(self,channel,measurement):
@@ -350,8 +350,18 @@ class SampleEngine:
                 offset += 10
         return Samples
 
-    def __startupCheck(self):
+    def __startupCheck(self,verbose=False):
         """Verify the sample engine is setup to start."""
+        if(verbose):
+            print("Verifying ready to start up")
+            print("Calibrating...")
+        Samples = [[0 for _ in range(self.__packetSize+1)] for _ in range(self.bulkProcessRate)]
+        while(not self.__isCalibrated() and self.__sampleCount < 20000):
+            self.__sampleLoop(0,Samples,1)
+        self.getSamples()
+        if not self.__isCalibrated():
+            print("Connection error, failed to calibrate after 20,000 samples")
+            return False
         if not self.__channels[self.__triggerChannel]:
             print("Error:  Trigger channel not enabled.")
             return False
@@ -376,7 +386,7 @@ class SampleEngine:
         return True
 
     def getSamples(self):
-        """Returns samples in a Python list.  Format is [timestamp, main, usb, aux, mainVolts,usbVolts].  Only includes enabled channels."""
+        """Returns samples in a Python list.  Format is [timestamp, main, usb, aux, mainVolts,usbVolts]."""
         result = self.__arrangeSamples(True)
         return result
 
@@ -444,13 +454,30 @@ class SampleEngine:
             if(self.__channels[i]):
                 self.__f.write((self.__channelnames[i] + ","))
         self.__f.write("\n")
+
+    def __sampleLoop(self,S,Samples,ProcessRate):
+        buffer = self.monsoon.BulkRead()
+        for start in range(0,len(buffer),64):
+            buf = buffer[start:start+64]
+            Sample = self.monsoon.swizzlePacket(buf)
+            numSamples = Sample[2]
+            Sample.append(time.time() - self.__startTime)
+            Samples[S] = Sample
+            S += numSamples
+            if(S >= ProcessRate):
+                bulkPackets = self.__processPacket(Samples)
+                if(len(bulkPackets) > 0):
+                    self.__vectorProcess(bulkPackets)
+                    self.__sampleCount += len(bulkPackets)
+                S = 0
+        return S
+
     def startSampling(self, samples=5000, granularity = 1):
         """Starts sampling."""
         """granularity: Controls the resolution at which samples are stored.  1 = all samples stored, 10 = 1 out of 10 samples stored, etc."""
         self.__Reset()
         self.__sampleLimit = samples
         self.__granularity = granularity
-        self.__granCount = 1
         Samples = [[0 for _ in range(self.__packetSize+1)] for _ in range(self.bulkProcessRate)]
         S = 0
         debugcount = 0
@@ -459,26 +486,17 @@ class SampleEngine:
         csvOutRateLimit = True
         csvOutThreshold = self.bulkProcessRate/2
         self.__startTime = time.time()
-        if not self.__startupCheck():
-            return False
         if(self.__CSVOutEnable):
             self.__outputCSVHeaders()
         self.monsoon.StartSampling(1250,0xFFFFFFFF)
+        if not self.__startupCheck():
+            self.monsoon.stopSampling()
+            return False
         while not self.__stopTriggerSet:
-            buf = self.monsoon.BulkRead()
-            Sample = self.monsoon.swizzlePacket(buf)
-            numSamples = Sample[2]
-            self.__sampleCount += numSamples
-            Sample.append(time.time() - self.__startTime)
-            Samples[S] = Sample
-            S += numSamples
-            if(S >= self.bulkProcessRate):
-                bulkPackets = self.__processPacket(Samples)
-                if(len(bulkPackets) > 0):
-                    self.__vectorProcess(bulkPackets)
-                S = 0
+            S = self.__sampleLoop(S,Samples,self.bulkProcessRate)
+            if(S == 0):
                 csvOutRateLimit = True
-            if(S >= csvOutThreshold and csvOutRateLimit and self.__CSVOutEnable and self.__startTriggerSet):
+            if(S >= csvOutThreshold and self.__CSVOutEnable and self.__startTriggerSet):
                 self.__outputToCSV()
                 csvOutRateLimit = False
         self.monsoon.stopSampling()
@@ -486,4 +504,50 @@ class SampleEngine:
             self.__outputToCSV()
             self.disableCSVOutput()
         pass
+
+    def periodicStartSampling(self):
+        """Causes the Power Monitor to enter sample mode, but doesn't actively collect samples.
+        Call periodicCollectSamples() periodically get measurements.
+        """
+        self.__Reset()
+        self.__sampleLimit = triggers.SAMPLECOUNT_INFINITE
+        self.__granularity = 1
+        if(self.__CSVOutEnable):
+            self.__outputCSVHeaders()
+        Samples = [[0 for _ in range(self.__packetSize+1)] for _ in range(self.bulkProcessRate)]
+        self.__startTime = time.time()
+        self.monsoon.StartSampling(1250,triggers.SAMPLECOUNT_INFINITE)
+        if not self.__startupCheck():
+            self.monsoon.stopSampling()
+            return False
+        result = self.getSamples()
+        return result
+
+
+    def periodicCollectSamples(self,samples=100):
+        """Start sampling with periodicStartSampling(), then call this to collect samples.
+        Returns the most recent measurements made by the Power Monitor."""
+        #TODO:  This normally returns 3-5 samples over the requested number of samples.
+        self.__sampleCount = 0
+        self.__sampleLimit = samples
+        self.__stopTriggerSet = False
+        self.monsoon.BulkRead() #Clear out stale buffer
+        Samples = [[0 for _ in range(self.__packetSize+1)] for _ in range(1)]
+        while not self.__stopTriggerSet:
+            S = self.__sampleLoop(0,Samples,1)
+        if(self.__CSVOutEnable and self.__startTriggerSet):
+            self.__outputToCSV() #Note that this will cause the script to return nothing.
+        result = self.getSamples()
+        return result
+
+    def periodicStopSampling(self, closeCSV=False):
+        """Performs cleanup tasks when finished sampling."""
+        if(self.__CSVOutEnable and self.__startTriggerSet):
+            self.__outputToCSV()
+            if(closeCSV):
+                self.disableCSVOutput()
+        self.monsoon.stopSampling()
+
+
+
 

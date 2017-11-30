@@ -207,6 +207,10 @@ void getBulkData(libusb_device_handle* handle)
 
 		if (lengthTransferred > 0)
 		{
+			for (int i = queueIndex+lengthTransferred; i < queueIndex+64; i++)
+			{
+				Queue[i] = 0;
+			}
 			queueIndex += packetLength;//Always increment by 64 bytes.
 			if (queueIndex >= QueueSize)
 			{

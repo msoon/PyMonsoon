@@ -14,7 +14,10 @@ class calibrationData(object):
         self.zeroCalFineIndex = 0
         self.refCalCourseIndex = 0
         self.zeroCalCourseIndex = 0
-        self.calibrated = False
+        self.coarseRefCalibrated = False
+        self.coarseZeroCalibrated = False
+        self.fineRefCalibrated = False
+        self.fineZeroCalibrated = False
         pass
     def clear(self):
         self.refCalFine = [0 for x in range(self.calsToKeep)]
@@ -25,14 +28,19 @@ class calibrationData(object):
         self.zeroCalFineIndex = 0
         self.refCalCourseIndex = 0
         self.zeroCalCourseIndex = 0
-        self.calibrated = False
+        self.coarseRefCalibrated = False
+        self.coarseZeroCalibrated = False
+        self.fineRefCalibrated = False
+        self.fineZeroCalibrated = False
+
     def __getCal(self, list):
         
-        if(self.calibrated):
+        if(self.calibrated()):
             return sum(list)/len(list)
         else:#We shouldn't be calling this at all if we aren't calibrated.
             return 0
-
+    def calibrated(self):
+        return self.coarseRefCalibrated and self.coarseZeroCalibrated and self.fineRefCalibrated and self.fineZeroCalibrated 
     def getRefCal(self, Coarse):
         """Get average reference calibration measurement"""
         if(Coarse):
@@ -62,13 +70,13 @@ class calibrationData(object):
                 self.__addCal(self.refCalCoarse,value,self.refCalCourseIndex)
                 self.refCalCourseIndex+= 1
                 if(self.refCalCourseIndex >= self.calsToKeep):
-                    self.calibrated = True
+                    self.coarseRefCalibrated = True
                     self.refCalCourseIndex = 0
             else:
                 self.__addCal(self.refCalFine,value,self.refCalFineIndex)
                 self.refCalFineIndex+= 1
                 if(self.refCalFineIndex >= self.calsToKeep):
-                    self.calibrated = True
+                    self.fineRefCalibrated = True
                     self.refCalFineIndex = 0
         
 
@@ -79,13 +87,13 @@ class calibrationData(object):
                 self.__addCal(self.zeroCalCoarse,value,self.zeroCalCourseIndex)
                 self.zeroCalCourseIndex+= 1
                 if(self.zeroCalCourseIndex >= self.calsToKeep):
-                    self.calibrated = True
+                    self.coarseZeroCalibrated = True
                     self.zeroCalCourseIndex = 0
             else:
                 self.__addCal(self.zeroCalFine,value,self.zeroCalFineIndex)
                 self.zeroCalFineIndex+= 1
                 if(self.zeroCalFineIndex >= self.calsToKeep):
-                    self.calibrated = True
+                    self.fineZeroCalibrated = True
                     self.zeroCalFineIndex = 0
 
 
