@@ -82,7 +82,14 @@ void sendCommand(libusb_device_handle* handle, unsigned char operation, int valu
 void stopSampling(libusb_device_handle* handle)
 {
 	running = false;
-	libusb_control_transfer(handle, 0x40, 0x03, 0, 0, 0, 0, 5000);
+	libusb_control_transfer(handle, 
+		0x40,
+		0x03, 
+		0, 
+		0, 
+		0, 
+		0, 
+		5000);
 	sampleThread.join();
 }
 
@@ -121,9 +128,25 @@ void startSampling(libusb_device_handle* handle, int calTime, int maxTime)
 {
 	std::vector<unsigned char> values_array = intToBytes(calTime);
 	std::vector<unsigned char> maxTime_array = intToBytes(maxTime);
-	short wValue = (values_array[0] | values_array[1]);
-	short wIndex = (0x02 | 0);
-	libusb_control_transfer(handle, 0x40, 0x02, wValue, wIndex, reinterpret_cast<unsigned char*>(maxTime_array.data()), 4, 5000);
+	short wValue = (values_array[3] | values_array[2]);
+	short wIndex = 0;// (0x02 | 0);
+	unsigned char data[4];
+	data[0] = 0xFF;
+	data[1] = 0xFF;
+	data[2] = 0xFF;
+	data[3] = 0xFF;
+
+	libusb_control_transfer(handle, //Device handle
+		0x40, //bmRequestType
+		0x02, //bRequest
+		calTime, //wValue
+		wIndex, //wIndex
+		data, //Data
+		//reinterpret_cast<unsigned char*>(maxTime_array.data()),//data
+		sizeof(data), //wLength
+		5000);//timeout
+
+
 	sampleThread = thread(getBulkData, handle);
 }
 
