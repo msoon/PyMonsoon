@@ -151,7 +151,8 @@ class Monsoon(object):
         measurements = list(measurements)
         return measurements
 
-
+    def Reconnect(self):
+        self.Protocol.reconnect(op.HardwareModel.LVPM,self.statusPacket.serialNumber)
 
 
 
