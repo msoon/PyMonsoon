@@ -158,7 +158,8 @@ class Monsoon(object):
         measurements = struct.unpack("HBBHHHHHHHHBBHHHHHHHHBBHHHHHHHHBB",rawBytes)
         measurements = list(measurements)
         return measurements
-
+    def Reconnect(self):
+        self.Protocol.reconnect(op.HardwareModel.HVPM,self.statusPacket.serialNumber)
 
 
 

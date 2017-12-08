@@ -7,12 +7,23 @@ import usb.util
 import numpy as np
 import os
 import platform
+import time
 
 class USB_protocol(object):
     """Uses native python usb functions to communicate with the Power Monitor.
     Best choice for connecting to a single Power Monitor."""
     def __init__(self):
         self.DEVICE = None
+
+    def reconnect(self,deviceType, serialno):
+        """Reset the port and reconnect to the power monitor.
+        Useful for some cases"""
+        self.DEVICE.reset()
+        time.sleep(5) 
+        #give device time to re-enumerate
+        #TODO:  We should be able to replace this with waiting for the event that fires when
+        #A new device enumerates on the system.
+        self.Connect(deviceType,serialno)
 
     def Connect(self,deviceType, serialno=None):
         """Connect to a Power Monitor.
@@ -162,3 +173,6 @@ class CPP_Backend_Protocol(object):
             raise NotImplementedError("OS not currently supported.")
         test = ctypes.CDLL(libLocation)
         return test
+    def reconnect(self):
+        raise NotImplementedError
+

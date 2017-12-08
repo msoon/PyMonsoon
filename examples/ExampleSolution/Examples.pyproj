@@ -6,7 +6,8 @@
     <ProjectGuid>19bef4c8-e322-4304-8318-38a3ea5273bc</ProjectGuid>
     <ProjectHome>
     </ProjectHome>
-    <StartupFile>NonBlockingSamplingExample.py</StartupFile>
+    <StartupFile>
+    </StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -27,12 +28,10 @@
     <PtvsTargetsFile>$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets</PtvsTargetsFile>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="NonBlockingSamplingExample.py">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="multiPMExample.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="periodicSamplingExample.py" />
     <Compile Include="ReflashExample.py" />
     <Compile Include="SimpleSamplingExample.py" />
   </ItemGroup>

@@ -448,7 +448,7 @@ class SampleEngine:
             output.append(volts)
             self.__usbVoltage = []
         return output
-    def __outputCSVHeaders(self):
+    def outputCSVHeaders(self):
         """Creates column headers in the CSV output file for each enabled channel."""
         for i in range(len(self.__channelnames)):
             if(self.__channels[i]):
@@ -487,7 +487,7 @@ class SampleEngine:
         csvOutThreshold = self.bulkProcessRate/2
         self.__startTime = time.time()
         if(self.__CSVOutEnable):
-            self.__outputCSVHeaders()
+            self.outputCSVHeaders()
         self.monsoon.StartSampling(1250,0xFFFFFFFF)
         if not self.__startupCheck():
             self.monsoon.stopSampling()
@@ -513,7 +513,7 @@ class SampleEngine:
         self.__sampleLimit = triggers.SAMPLECOUNT_INFINITE
         self.__granularity = 1
         if(self.__CSVOutEnable):
-            self.__outputCSVHeaders()
+            self.outputCSVHeaders()
         Samples = [[0 for _ in range(self.__packetSize+1)] for _ in range(self.bulkProcessRate)]
         self.__startTime = time.time()
         self.monsoon.StartSampling(1250,triggers.SAMPLECOUNT_INFINITE)

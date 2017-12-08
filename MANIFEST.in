@@ -15,8 +15,8 @@ include examples/ExampleSolution/ReflashExample.py
 include examples/ExampleSolution/SimpleSamplingExample.py
 include examples/ExampleSolution/multiPMExample.py
 #Libs:
-include Monsoon\Compiled\WIN32\Cpp_backend.dll
-include Monsoon\Compiled\Linux\libcpp_backend.so
+include Monsoon/Compiled/WIN32/Cpp_backend.dll
+include Monsoon/Compiled/Linux/libcpp_backend.so
 #Misc
 include LICENSE.txt
 
