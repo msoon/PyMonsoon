@@ -65,7 +65,7 @@ def testDisconnectBugSevere(serialno=None,Protocol=pmapi.USB_protocol()):
         except usb.core.USBError as e:
             print("Expected error hit.  Reconnecting")
             print(e.backend_error_code)
-            Mon.reconnect()
+            Mon.Reconnect()
             Mon.stopSampling()
 
     HVMON.closeDevice();
@@ -86,7 +86,7 @@ def testDisconnectBug(serialno=None,Protocol=pmapi.USB_protocol()):
         except usb.core.USBError as e:
             print("Expected error hit.  Reconnecting")
             print(e.backend_error_code)
-            Mon.reconnect()
+            Mon.Reconnect()
             Mon.stopSampling()
 
     HVMON.closeDevice();
