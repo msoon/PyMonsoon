@@ -1,0 +1,98 @@
+import Monsoon.HVPM as HVPM
+import Monsoon.LVPM as LVPM
+import Monsoon.sampleEngine as sampleEngine
+import Monsoon.Operations as op
+import Monsoon.pmapi as pmapi
+import numpy as np
+import usb
+
+#Initial commit of test cases.
+#Primary concern at this point is testing fixes for the disconnect bug.
+#Eventually expand other test cases so we have an automated test for every function in the library.
+
+def testListOutput(serialno=None,Protocol=pmapi.USB_protocol()):
+    """Test case 1.
+    Basic connection, outputs as a Python list."""
+    Mon = HVPM.Monsoon()
+    Mon.setup_usb(serialno,Protocol)
+    Engine = sampleEngine.SampleEngine(Mon)
+    Engine.ConsoleOutput(False)
+    numSamples = 5000
+    Engine.startSampling(numSamples)
+    samples = Engine.getSamples()
+
+    timestamp = samples[sampleEngine.channels.timeStamp]
+    mainCurrent = samples[sampleEngine.channels.MainCurrent]
+    auxCurrent = samples[sampleEngine.channels.AuxCurrent]
+    usbCurrent = samples[sampleEngine.channels.USBCurrent]
+    mainVoltage = samples[sampleEngine.channels.MainVoltage]
+    usbVoltage = samples[sampleEngine.channels.USBVoltage]
+
+    #Do something with this information
+
+    pass
+def testCSVOutput(serialno=None,Protocol=pmapi.USB_protocol()):
+    """Test case 2:
+    CSV Output."""
+    #Setting all channels enabled
+    Mon = HVPM.Monsoon()
+    Mon.setup_usb(serialno,Protocol)
+    Engine = sampleEngine.SampleEngine(Mon)
+    Engine.ConsoleOutput(False)
+    Engine.enableChannel(sampleEngine.channels.MainCurrent)
+    Engine.enableChannel(sampleEngine.channels.MainVoltage)
+    Engine.enableChannel(sampleEngine.channels.USBCurrent)
+    Engine.enableChannel(sampleEngine.channels.USBVoltage)
+    Engine.enableChannel(sampleEngine.channels.AuxCurrent)
+    Engine.enableChannel(sampleEngine.channels.timeStamp)
+    Engine.enableCSVOutput("Test3.csv")
+    Engine.startSampling(3000000,100) #Collect 10 minutes worth of samples a 1/100 granularity
+    Mon.closeDevice()
+def testDisconnectBugSevere(serialno=None,Protocol=pmapi.USB_protocol()):
+    """This will force the disconnect bug to occur in a short period of time.
+    This one doesn't necessarily need to pass, but an ideal fix would allow it to do so."""
+    Mon = HVPM.Monsoon()
+    Mon.setup_usb(serialno,Protocol)
+    Engine = sampleEngine.SampleEngine(Mon)
+    Engine.ConsoleOutput(False)
+    i = 0
+    for i in range(5000):
+        i += 1
+        try:
+            Mon.StartSampling()
+            #Mon.stopSampling()
+            print(i)
+        except usb.core.USBError as e:
+            print("Expected error hit.  Reconnecting")
+            print(e.backend_error_code)
+            Mon.reconnect()
+            Mon.stopSampling()
+
+    HVMON.closeDevice();
+def testDisconnectBug(serialno=None,Protocol=pmapi.USB_protocol()):
+    """Test for start sampling disconnect bug.
+    This is the normal use case for customers who encounter the bug.
+    In an ideal solution, it will pass."""
+    Mon = HVPM.Monsoon()
+    Mon.setup_usb(serialno,Protocol)
+    Engine = sampleEngine.SampleEngine(Mon)
+    Engine.ConsoleOutput(False)
+    i = 0
+    for i in range(5000):
+        i += 1
+        try:
+            Engine.startSampling(10)
+            print(i)
+        except usb.core.USBError as e:
+            print("Expected error hit.  Reconnecting")
+            print(e.backend_error_code)
+            Mon.reconnect()
+            Mon.stopSampling()
+
+    HVMON.closeDevice();
+
+
+def main():
+    testDisconnectBugSevere()
+if __name__ == "__main__":
+    main()
