@@ -71,6 +71,10 @@ class USB_protocol(object):
     def sendCommand(self,operation, value):
         """Send a USB Control transfer.  Normally this is used to set an EEPROM value."""
         try:
+            if not self.verifyReady(operation):
+                self.stopSampling()
+                #TODO:  We might smooth this behavior over later, but for now we want to explicitly fail if this occurs.
+                raise usb.core.USBError
             value = int(value)
             value_array = struct.unpack("4B",struct.pack("I",value))
             operation_array = struct.unpack("4b",struct.pack("I",operation))
@@ -105,7 +109,12 @@ class USB_protocol(object):
     def closeDevice(self):
         """Cleanup any loose ends, if present."""
         usb.util.dispose_resources(self.DEVICE)
-        pass
+    
+    def verifyReady(self,opcode):
+        """Check whether we're currently in sample mode.
+        Some commands can cause errors if we are."""
+        status = self.getValue(op.OpCodes.getStartStatus, 1)
+        return not np.bitwise_and(0x80,status)
 
 class CPP_Backend_Protocol(object):
     """Uses C++ backend with libusb.

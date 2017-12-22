@@ -48,6 +48,7 @@ def testCSVOutput(serialno=None,Protocol=pmapi.USB_protocol()):
     Engine.enableCSVOutput("Test3.csv")
     Engine.startSampling(3000000,100) #Collect 10 minutes worth of samples a 1/100 granularity
     Mon.closeDevice()
+
 def testDisconnectBugSevere(serialno=None,Protocol=pmapi.USB_protocol()):
     """This will force the disconnect bug to occur in a short period of time.
     This one doesn't necessarily need to pass, but an ideal fix would allow it to do so."""
@@ -68,7 +69,8 @@ def testDisconnectBugSevere(serialno=None,Protocol=pmapi.USB_protocol()):
             Mon.Reconnect()
             Mon.stopSampling()
 
-    HVMON.closeDevice();
+    Mon.closeDevice();
+
 def testDisconnectBug(serialno=None,Protocol=pmapi.USB_protocol()):
     """Test for start sampling disconnect bug.
     This is the normal use case for customers who encounter the bug.
@@ -88,11 +90,33 @@ def testDisconnectBug(serialno=None,Protocol=pmapi.USB_protocol()):
             print(e.backend_error_code)
             Mon.Reconnect()
             Mon.stopSampling()
+    Mon.closeDevice();
 
-    HVMON.closeDevice();
-
+def testVoltageBug(serialno=None,Protocol=pmapi.USB_protocol()):
+    """If a command is sent to the Power Monitor to setVout while it is in sample mode, there is a high probability the voltage will be set to a random value, and the unit will crash.
+    During normal operation, this can occur if setVout is called immediately after stopSampling().  Depending on the timing, the unit might not actually be out of sample mode when the setVout command is received."""
+    Mon = HVPM.Monsoon()
+    Mon.setup_usb(serialno,Protocol)
+    Engine = sampleEngine.SampleEngine(Mon)
+    Engine.ConsoleOutput(False)
+    i = 0
+    for i in range(5000):
+        i += 1
+        try:
+            Mon.setVout(0.8)
+            Engine.startSampling(500)
+            Mon.setVout(0.8)
+            samples = Engine.getSamples()
+            voltage = np.array(samples[sampleEngine.channels.MainVoltage])
+            if(np.any(voltage > 1.0)):
+                print("Error, voltage is wrong")
+                assert(False)
+            print(i)
+        except usb.core.USBError as e:
+            print(e.message)
+    Mon.closeDevice();
 
 def main():
-    testDisconnectBugSevere()
+    testVoltageBug()
 if __name__ == "__main__":
     main()
