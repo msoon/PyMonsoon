@@ -61,7 +61,7 @@ def testDisconnectBugSevere(serialno=None,Protocol=pmapi.USB_protocol()):
         i += 1
         try:
             Mon.StartSampling()
-            #Mon.stopSampling()
+            Mon.stopSampling()
             print(i)
         except usb.core.USBError as e:
             print("Expected error hit.  Reconnecting")
@@ -100,20 +100,24 @@ def testVoltageBug(serialno=None,Protocol=pmapi.USB_protocol()):
     Engine = sampleEngine.SampleEngine(Mon)
     Engine.ConsoleOutput(False)
     i = 0
+    Mon.setVout(0.8)
     for i in range(5000):
         i += 1
         try:
-            Mon.setVout(0.8)
             Engine.startSampling(500)
             Mon.setVout(0.8)
             samples = Engine.getSamples()
             voltage = np.array(samples[sampleEngine.channels.MainVoltage])
             if(np.any(voltage > 1.0)):
+                #Here we're checking to see if there's a condition where it didn't fail, but the voltage is still wrong.
+                #This should probably never happen, but let's be sure about that.
                 print("Error, voltage is wrong")
                 assert(False)
             print(i)
         except usb.core.USBError as e:
-            print(e.message)
+            print(e.backend_error_code)
+            Mon.Reconnect()
+            Mon.stopSampling()
     Mon.closeDevice();
 
 def main():
