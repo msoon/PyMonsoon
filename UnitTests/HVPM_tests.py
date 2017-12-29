@@ -5,7 +5,12 @@ import Monsoon.Operations as op
 import Monsoon.pmapi as pmapi
 import numpy as np
 import usb
+import logging
+import os
+os.environ['PYUSB_DEBUG'] = 'debug'
+os.environ['PYUSB_LOG_FILENAME'] = 'pyusb.log'
 
+usb._setup_log()
 #Initial commit of test cases.
 #Primary concern at this point is testing fixes for the disconnect bug.
 #Eventually expand other test cases so we have an automated test for every function in the library.
@@ -100,27 +105,23 @@ def testVoltageBug(serialno=None,Protocol=pmapi.USB_protocol()):
     Engine = sampleEngine.SampleEngine(Mon)
     Engine.ConsoleOutput(False)
     i = 0
+    reconnects = 0
     Mon.setVout(0.8)
     for i in range(5000):
         i += 1
-        try:
-            Engine.startSampling(500)
-            Mon.setVout(0.8)
-            samples = Engine.getSamples()
-            voltage = np.array(samples[sampleEngine.channels.MainVoltage])
-            if(np.any(voltage > 1.0)):
-                #Here we're checking to see if there's a condition where it didn't fail, but the voltage is still wrong.
-                #This should probably never happen, but let's be sure about that.
-                print("Error, voltage is wrong")
-                assert(False)
-            print(i)
-        except usb.core.USBError as e:
-            print(e.backend_error_code)
-            Mon.Reconnect()
-            Mon.stopSampling()
+        Engine.startSampling(50)
+        Mon.setVout(0.8)
+        samples = Engine.getSamples()
+        voltage = np.array(samples[sampleEngine.channels.MainVoltage])
+        if(np.any(voltage > 1.0)):
+            #Here we're checking to see if there's a condition where it didn't fail, but the voltage is still wrong.
+            #This should probably never happen, but let's be sure about that.
+            print("Error, voltage is wrong")
+            assert(False)
+        print(i)
     Mon.closeDevice();
 
 def main():
-    testVoltageBug()
+    testDisconnectBugSevere()
 if __name__ == "__main__":
     main()

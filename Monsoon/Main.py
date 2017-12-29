@@ -16,7 +16,7 @@ def testHVPM(serialno=None,Protocol=pmapi.USB_protocol()):
     HVengine.ConsoleOutput(True)
     numSamples=sampleEngine.triggers.SAMPLECOUNT_INFINITE #Don't stop based on sample count, continue until the trigger conditions have been satisfied.
     HVengine.setStartTrigger(sampleEngine.triggers.GREATER_THAN,0) #Start when we exceed 0 s
-    HVengine.setStopTrigger(sampleEngine.triggers.GREATER_THAN,5) #Stop when we exceed 5 s.
+    HVengine.setStopTrigger(sampleEngine.triggers.GREATER_THAN,20) #Stop when we exceed 5 s.
     HVengine.setTriggerChannel(sampleEngine.channels.timeStamp) #Start and stop judged by the timestamp channel.
     HVengine.startSampling(numSamples)
     HVMON.closeDevice();
@@ -42,7 +42,7 @@ def testLVPM(serialno=None,Protcol=pmapi.USB_protocol()):
     engine.disableChannel(sampleEngine.channels.MainCurrent)
     engine.disableChannel(sampleEngine.channels.MainVoltage)
 
-    engine.setStartTrigger(sampleEngine.triggers.GREATER_THAN,5)
+    engine.setStartTrigger(sampleEngine.triggers.GREATER_THAN,0)
     engine.setStopTrigger(sampleEngine.triggers.GREATER_THAN,10)
     engine.setTriggerChannel(sampleEngine.channels.timeStamp)
     #Take measurements from the USB Channel

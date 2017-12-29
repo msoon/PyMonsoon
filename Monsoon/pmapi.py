@@ -36,7 +36,6 @@ class USB_protocol(object):
             except:#Catches some platform-specific errors when connecting to multiple PMs simultaneously.
                 return False
         self.DEVICE = usb.core.find(custom_match=device_matcher)
-   
         if (self.DEVICE is None):
             print('Unable to find device')
             return
@@ -70,19 +69,16 @@ class USB_protocol(object):
         return(self.DEVICE.read(0x81,64,timeout=1000))
     def sendCommand(self,operation, value):
         """Send a USB Control transfer.  Normally this is used to set an EEPROM value."""
-        try:
-            if not self.verifyReady(operation):
-                self.stopSampling()
-                #TODO:  We might smooth this behavior over later, but for now we want to explicitly fail if this occurs.
-                raise usb.core.USBError
-            value = int(value)
-            value_array = struct.unpack("4B",struct.pack("I",value))
-            operation_array = struct.unpack("4b",struct.pack("I",operation))
-            wValue = struct.unpack("H",struct.pack("BB",value_array[0],value_array[1]))[0]
-            wIndex = struct.unpack("H",struct.pack("BB",operation_array[0],value_array[2]))[0]
-            self.DEVICE.ctrl_transfer(op.Control_Codes.USB_OUT_PACKET,op.Control_Codes.USB_SET_VALUE,wValue,wIndex,value_array,5000)
-        except:
-            print("Control Transfer Error")
+        if not self.verifyReady(operation):
+            self.stopSampling()
+            #TODO:  We might smooth this behavior over later, but for now we want to explicitly fail if this occurs.
+            raise ValueError("Power Monitor Error, attempted to send a command while the unit is in Sample Mode.")
+        value = int(value)
+        value_array = struct.unpack("4B",struct.pack("I",value))
+        operation_array = struct.unpack("4b",struct.pack("I",operation))
+        wValue = struct.unpack("H",struct.pack("BB",value_array[0],value_array[1]))[0]
+        wIndex = struct.unpack("H",struct.pack("BB",operation_array[0],value_array[2]))[0]
+        self.DEVICE.ctrl_transfer(op.Control_Codes.USB_OUT_PACKET,op.Control_Codes.USB_SET_VALUE,wValue,wIndex,value_array,5000)
 
     def stopSampling(self):
         """Send a control transfer instructing the Power Monitor to stop sampling."""
@@ -104,6 +100,9 @@ class USB_protocol(object):
         wIndex = struct.unpack("H",struct.pack("bb",operation_array[0],0))[0]
         result = self.DEVICE.ctrl_transfer(op.Control_Codes.USB_IN_PACKET,op.Control_Codes.USB_SET_VALUE,0,wIndex,4,5000)
         result = struct.unpack("I",result)[0]
+        if(result == op.ReturnCodes.ERROR):
+            self.stopSampling()
+            raise ValueError("Error code returned.  Attempted to query Power Monitor while in sample mode.")
         return result
 
     def closeDevice(self):
