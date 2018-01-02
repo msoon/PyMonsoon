@@ -122,6 +122,6 @@ def testVoltageBug(serialno=None,Protocol=pmapi.USB_protocol()):
     Mon.closeDevice();
 
 def main():
-    testDisconnectBugSevere()
+    testDisconnectBug()
 if __name__ == "__main__":
     main()
