@@ -10,6 +10,10 @@ from Monsoon.calibrationData import calibrationData
 from Monsoon import Operations as ops
 from copy import deepcopy
 import numpy as np
+import signal
+import sys
+import usb
+import os
 
 class channels:
     timeStamp = 0
@@ -34,13 +38,22 @@ class triggers:
             return True
         else:
             return False
+class ErrorHandlingModes:
+    off = 0 #No error checking.  Use if you're seeing a large number of dropped samples
+    full = 1 #Automatically handle errors
+    debug = 2 #Handle errors + output logging data.  Not fully implemented yet.
 
 class SampleEngine:
-    def __init__(self, Monsoon,bulkProcessRate=128):
+    def __init__(self, Monsoon,bulkProcessRate=128, errorMode = ErrorHandlingModes.full):
         """Declares global variables.
         During testing, we found the garbage collector would slow down sampling enough to cause a lot of dropped samples.
         We've tried to combat this by allocating as much as possible in advance."""
         self.monsoon = Monsoon
+        self.__errorMode = errorMode
+        if(errorMode == ErrorHandlingModes.debug):
+            os.environ['PYUSB_DEBUG'] = 'debug'
+            os.environ['PYUSB_LOG_FILENAME'] = 'pyusb.log'
+            usb._setup_log()
         self.__mainCal = calibrationData()
         self.__usbCal = calibrationData()
         self.__auxCal = calibrationData()
@@ -472,9 +485,7 @@ class SampleEngine:
                 S = 0
         return S
 
-    def startSampling(self, samples=5000, granularity = 1):
-        """Starts sampling."""
-        """granularity: Controls the resolution at which samples are stored.  1 = all samples stored, 10 = 1 out of 10 samples stored, etc."""
+    def __startSampling(self, samples=5000,granularity=1):
         self.__Reset()
         self.__sampleLimit = samples
         self.__granularity = granularity
@@ -503,51 +514,34 @@ class SampleEngine:
         if(self.__CSVOutEnable):
             self.__outputToCSV()
             self.disableCSVOutput()
-        pass
 
-    def periodicStartSampling(self):
-        """Causes the Power Monitor to enter sample mode, but doesn't actively collect samples.
-        Call periodicCollectSamples() periodically get measurements.
-        """
-        self.__Reset()
-        self.__sampleLimit = triggers.SAMPLECOUNT_INFINITE
-        self.__granularity = 1
-        if(self.__CSVOutEnable):
-            self.outputCSVHeaders()
-        Samples = [[0 for _ in range(self.__packetSize+1)] for _ in range(self.bulkProcessRate)]
-        self.__startTime = time.time()
-        self.monsoon.StartSampling(1250,triggers.SAMPLECOUNT_INFINITE)
-        if not self.__startupCheck():
-            self.monsoon.stopSampling()
-            return False
-        result = self.getSamples()
-        return result
-
-
-    def periodicCollectSamples(self,samples=100):
-        """Start sampling with periodicStartSampling(), then call this to collect samples.
-        Returns the most recent measurements made by the Power Monitor."""
-        #TODO:  This normally returns 3-5 samples over the requested number of samples.
-        self.__sampleCount = 0
-        self.__sampleLimit = samples
-        self.__stopTriggerSet = False
-        self.monsoon.BulkRead() #Clear out stale buffer
-        Samples = [[0 for _ in range(self.__packetSize+1)] for _ in range(1)]
-        while not self.__stopTriggerSet:
-            S = self.__sampleLoop(0,Samples,1)
-        if(self.__CSVOutEnable and self.__startTriggerSet):
-            self.__outputToCSV() #Note that this will cause the script to return nothing.
-        result = self.getSamples()
-        return result
-
-    def periodicStopSampling(self, closeCSV=False):
-        """Performs cleanup tasks when finished sampling."""
-        if(self.__CSVOutEnable and self.__startTriggerSet):
-            self.__outputToCSV()
-            if(closeCSV):
-                self.disableCSVOutput()
-        self.monsoon.stopSampling()
-
+    def startSampling(self, samples=5000, granularity = 1):
+        """Starts sampling.
+        samples:  Max number of samples before test ends.
+        granularity: Controls the resolution at which samples are stored.  1 = all samples stored, 10 = 1 out of 10 samples stored, etc."""
+        if(self.__errorMode == ErrorHandlingModes.off):
+            self.__startSampling(samples,granularity)
+        else:
+            try:
+                self.__startSampling(samples,granularity)
+            except KeyboardInterrupt:
+                print("Caught keyboard interrupt, test ending adruptly.")
+                self.monsoon.stopSampling()
+                if(self.__CSVOutEnable):
+                    self.__outputToCSV()
+                    self.disableCSVOutput()
+            except usb.core.USBError:
+                print("Caught disconnection event. Test restarting with default parameters")
+                self.monsoon.Reconnect()
+                self.monsoon.stopSampling()
+                self.monsoon.StartSampling(samples,granularity)
+            except Exception as e:
+                print("Error: Unknown exception caught.  Test failed.")
+                self.monsoon.stopSampling()
+                if(self.__CSVOutEnable):
+                    self.__outputToCSV()
+                    self.disableCSVOutput()
+                raise Exception(e.args)
 
 
 

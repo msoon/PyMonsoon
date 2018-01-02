@@ -29,8 +29,14 @@ class OpCodes:
     FirmwareVersion = 0xC0 #Read-only, gets the firmware version
     ProtocolVersion = 0xC1 #Read-only, gets the Protocol version
     HardwareModel = 0x45 #0 = unknown, 1 = LV, 2 = HV
+    getStartStatus = 0xC4 
     Stop = 0xFF
 
+class ReturnCodes:
+    """Status return codes"""
+    #TODO:  Should really consolidate this with a few other misc values.
+    ERROR = 0xfffffffE
+    CURRENT_FIRMWARE_REV = 27
 class HardwareModel:
     """Hardware Model Types"""
     UNKNOWN = 0
