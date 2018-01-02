@@ -36,6 +36,7 @@ class ReturnCodes:
     """Status return codes"""
     #TODO:  Should really consolidate this with a few other misc values.
     ERROR = 0xfffffffE
+    CURRENT_FIRMWARE_REV = 27
 class HardwareModel:
     """Hardware Model Types"""
     UNKNOWN = 0
