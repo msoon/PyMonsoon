@@ -36,7 +36,6 @@ class USB_protocol(object):
             except:#Catches some platform-specific errors when connecting to multiple PMs simultaneously.
                 return False
         self.DEVICE = usb.core.find(custom_match=device_matcher)
-   
         if (self.DEVICE is None):
             print('Unable to find device')
             return
@@ -70,15 +69,16 @@ class USB_protocol(object):
         return(self.DEVICE.read(0x81,64,timeout=1000))
     def sendCommand(self,operation, value):
         """Send a USB Control transfer.  Normally this is used to set an EEPROM value."""
-        try:
-            value = int(value)
-            value_array = struct.unpack("4B",struct.pack("I",value))
-            operation_array = struct.unpack("4b",struct.pack("I",operation))
-            wValue = struct.unpack("H",struct.pack("BB",value_array[0],value_array[1]))[0]
-            wIndex = struct.unpack("H",struct.pack("BB",operation_array[0],value_array[2]))[0]
-            self.DEVICE.ctrl_transfer(op.Control_Codes.USB_OUT_PACKET,op.Control_Codes.USB_SET_VALUE,wValue,wIndex,value_array,5000)
-        except:
-            print("Control Transfer Error")
+        if not self.verifyReady(operation):
+            self.stopSampling()
+            #TODO:  We might smooth this behavior over later, but for now we want to explicitly fail if this occurs.
+            raise ValueError("Power Monitor Error, attempted to send a command while the unit is in Sample Mode.")
+        value = int(value)
+        value_array = struct.unpack("4B",struct.pack("I",value))
+        operation_array = struct.unpack("4b",struct.pack("I",operation))
+        wValue = struct.unpack("H",struct.pack("BB",value_array[0],value_array[1]))[0]
+        wIndex = struct.unpack("H",struct.pack("BB",operation_array[0],value_array[2]))[0]
+        self.DEVICE.ctrl_transfer(op.Control_Codes.USB_OUT_PACKET,op.Control_Codes.USB_SET_VALUE,wValue,wIndex,value_array,5000)
 
     def stopSampling(self):
         """Send a control transfer instructing the Power Monitor to stop sampling."""
@@ -88,6 +88,9 @@ class USB_protocol(object):
         """Instruct the Power Monitor to enter sample mode.  
         calTime = Amount of time, in ms, between calibration samples.
         maxTime = Number of samples to take before exiting sample mode automatically."""
+        if not self.verifyReady(operation):
+            self.stopSampling()
+            raise ValueError("Power Monitor Error, attempted to start while already started.")
         value_array = struct.unpack("4B",struct.pack("I",calTime))
         maxtime_array = struct.unpack("4B",struct.pack("I",maxTime))
         wValue = struct.unpack("H",struct.pack("BB",value_array[0],value_array[1]))[0]
@@ -96,16 +99,30 @@ class USB_protocol(object):
 
     def getValue(self,operation,valueLength):
         """Get an EEPROM value from the Power Monitor."""
+        if not self.verifyReady(operation):
+            self.stopSampling()
+            raise ValueError("Power Monitor Error, attempted to query Power Monitor while sampling.")
         operation_array = struct.unpack("4b",struct.pack("I",operation))
         wIndex = struct.unpack("H",struct.pack("bb",operation_array[0],0))[0]
         result = self.DEVICE.ctrl_transfer(op.Control_Codes.USB_IN_PACKET,op.Control_Codes.USB_SET_VALUE,0,wIndex,4,5000)
         result = struct.unpack("I",result)[0]
+        if(result == op.ReturnCodes.ERROR):
+            self.stopSampling()
+            #verifyReady should ensure we never get here, but I'm leaving it in regardless.
+            raise ValueError("Error code returned.  Attempted to query Power Monitor while in sample mode.")
         return result
 
     def closeDevice(self):
         """Cleanup any loose ends, if present."""
+        self.stopSampling()
         usb.util.dispose_resources(self.DEVICE)
-        pass
+    
+    def verifyReady(self,opcode):
+        """Check whether we're currently in sample mode.
+        Some commands can cause errors if we are.
+        Current behavior checks for all opcodes, though there are some specific ones which will not return an error code."""
+        status = self.getValue(op.OpCodes.getStartStatus, 1)
+        return not np.bitwise_and(0x80,status)
 
 class CPP_Backend_Protocol(object):
     """Uses C++ backend with libusb.
