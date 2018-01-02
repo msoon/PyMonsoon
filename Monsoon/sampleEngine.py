@@ -150,6 +150,7 @@ class SampleEngine:
     def enableCSVOutput(self, filename):
         """Opens a file and causes the sampleEngine to periodically output samples when taking measurements
         filename: The file measurements will be output to."""
+        self.__outputFilename = filename
         self.__f = open(filename,"w")
         self.__CSVOutEnable = True
 
@@ -534,7 +535,11 @@ class SampleEngine:
                 print("Caught disconnection event. Test restarting with default parameters")
                 self.monsoon.Reconnect()
                 self.monsoon.stopSampling()
-                self.monsoon.StartSampling(samples,granularity)
+                self.startSampling(samples,granularity)
+                if(self.__CSVOutEnable):
+                    self.__outputToCSV()
+                    self.disableCSVOutput()
+                    self.enableCSVOutput(self.__outputFilename)
             except Exception as e:
                 print("Error: Unknown exception caught.  Test failed.")
                 self.monsoon.stopSampling()
