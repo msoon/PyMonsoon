@@ -88,6 +88,9 @@ class USB_protocol(object):
         """Instruct the Power Monitor to enter sample mode.  
         calTime = Amount of time, in ms, between calibration samples.
         maxTime = Number of samples to take before exiting sample mode automatically."""
+        if not self.verifyReady(operation):
+            self.stopSampling()
+            raise ValueError("Power Monitor Error, attempted to start while already started.")
         value_array = struct.unpack("4B",struct.pack("I",calTime))
         maxtime_array = struct.unpack("4B",struct.pack("I",maxTime))
         wValue = struct.unpack("H",struct.pack("BB",value_array[0],value_array[1]))[0]
@@ -96,22 +99,28 @@ class USB_protocol(object):
 
     def getValue(self,operation,valueLength):
         """Get an EEPROM value from the Power Monitor."""
+        if not self.verifyReady(operation):
+            self.stopSampling()
+            raise ValueError("Power Monitor Error, attempted to query Power Monitor while sampling.")
         operation_array = struct.unpack("4b",struct.pack("I",operation))
         wIndex = struct.unpack("H",struct.pack("bb",operation_array[0],0))[0]
         result = self.DEVICE.ctrl_transfer(op.Control_Codes.USB_IN_PACKET,op.Control_Codes.USB_SET_VALUE,0,wIndex,4,5000)
         result = struct.unpack("I",result)[0]
         if(result == op.ReturnCodes.ERROR):
             self.stopSampling()
+            #verifyReady should ensure we never get here, but I'm leaving it in regardless.
             raise ValueError("Error code returned.  Attempted to query Power Monitor while in sample mode.")
         return result
 
     def closeDevice(self):
         """Cleanup any loose ends, if present."""
+        self.stopSampling()
         usb.util.dispose_resources(self.DEVICE)
     
     def verifyReady(self,opcode):
         """Check whether we're currently in sample mode.
-        Some commands can cause errors if we are."""
+        Some commands can cause errors if we are.
+        Current behavior checks for all opcodes, though there are some specific ones which will not return an error code."""
         status = self.getValue(op.OpCodes.getStartStatus, 1)
         return not np.bitwise_and(0x80,status)
 

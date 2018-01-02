@@ -13,7 +13,7 @@ import numpy as np
 import signal
 import sys
 import usb
-
+import os
 
 class channels:
     timeStamp = 0
@@ -38,13 +38,22 @@ class triggers:
             return True
         else:
             return False
+class ErrorHandlingModes:
+    off = 0 #No error checking.  Use if you're seeing a large number of dropped samples
+    full = 1 #Automatically handle errors
+    debug = 2 #Handle errors + output logging data.  Not fully implemented yet.
 
 class SampleEngine:
-    def __init__(self, Monsoon,bulkProcessRate=128):
+    def __init__(self, Monsoon,bulkProcessRate=128, errorMode = ErrorHandlingModes.full):
         """Declares global variables.
         During testing, we found the garbage collector would slow down sampling enough to cause a lot of dropped samples.
         We've tried to combat this by allocating as much as possible in advance."""
         self.monsoon = Monsoon
+        self.__errorMode = errorMode
+        if(errorMode == ErrorHandlingModes.debug):
+            os.environ['PYUSB_DEBUG'] = 'debug'
+            os.environ['PYUSB_LOG_FILENAME'] = 'pyusb.log'
+            usb._setup_log()
         self.__mainCal = calibrationData()
         self.__usbCal = calibrationData()
         self.__auxCal = calibrationData()
@@ -476,59 +485,69 @@ class SampleEngine:
                 S = 0
         return S
 
+    def __startSampling(self, samples=5000,granularity=1):
+        self.__Reset()
+        self.__sampleLimit = samples
+        self.__granularity = granularity
+        Samples = [[0 for _ in range(self.__packetSize+1)] for _ in range(self.bulkProcessRate)]
+        S = 0
+        debugcount = 0
+        minutes = 0
+        granularity_index = 0
+        csvOutRateLimit = True
+        csvOutThreshold = self.bulkProcessRate/2
+        self.__startTime = time.time()
+        if(self.__CSVOutEnable):
+            self.outputCSVHeaders()
+        self.monsoon.StartSampling(1250,0xFFFFFFFF)
+        if not self.__startupCheck():
+            self.monsoon.stopSampling()
+            return False
+        while not self.__stopTriggerSet:
+            S = self.__sampleLoop(S,Samples,self.bulkProcessRate)
+            if(S == 0):
+                csvOutRateLimit = True
+            if(S >= csvOutThreshold and self.__CSVOutEnable and self.__startTriggerSet):
+                self.__outputToCSV()
+                csvOutRateLimit = False
+        self.monsoon.stopSampling()
+        if(self.__CSVOutEnable):
+            self.__outputToCSV()
+            self.disableCSVOutput()
+
     def startSampling(self, samples=5000, granularity = 1):
-        """Starts sampling."""
-        """granularity: Controls the resolution at which samples are stored.  1 = all samples stored, 10 = 1 out of 10 samples stored, etc."""
-        try:
-            self.__Reset()
-            self.__sampleLimit = samples
-            self.__granularity = granularity
-            Samples = [[0 for _ in range(self.__packetSize+1)] for _ in range(self.bulkProcessRate)]
-            S = 0
-            debugcount = 0
-            minutes = 0
-            granularity_index = 0
-            csvOutRateLimit = True
-            csvOutThreshold = self.bulkProcessRate/2
-            self.__startTime = time.time()
-            if(self.__CSVOutEnable):
-                self.outputCSVHeaders()
-            self.monsoon.StartSampling(1250,0xFFFFFFFF)
-            if not self.__startupCheck():
+        """Starts sampling.
+        samples:  Max number of samples before test ends.
+        granularity: Controls the resolution at which samples are stored.  1 = all samples stored, 10 = 1 out of 10 samples stored, etc."""
+        if(self.__errorMode == ErrorHandlingModes.off):
+            self.__startSampling(samples,granularity)
+        else:
+            try:
+                self.__startSampling(samples,granularity)
+            except KeyboardInterrupt:
+                print("Caught keyboard interrupt, test ending adruptly.")
                 self.monsoon.stopSampling()
-                return False
-            while not self.__stopTriggerSet:
-                S = self.__sampleLoop(S,Samples,self.bulkProcessRate)
-                if(S == 0):
-                    csvOutRateLimit = True
-                if(S >= csvOutThreshold and self.__CSVOutEnable and self.__startTriggerSet):
+                if(self.__CSVOutEnable):
                     self.__outputToCSV()
-                    csvOutRateLimit = False
-            self.monsoon.stopSampling()
-            if(self.__CSVOutEnable):
-                self.__outputToCSV()
-                self.disableCSVOutput()
-        except KeyboardInterrupt:
-            print("Caught keyboard interrupt, test ending adruptly.")
-            self.monsoon.stopSampling()
-            if(self.__CSVOutEnable):
-                self.__outputToCSV()
-                self.disableCSVOutput()
-        except IOError:
-            print("Caught keyboard interrupt, test ending adruptly.")
-            self.monsoon.stopSampling()
-            if(self.__CSVOutEnable):
-                self.__outputToCSV()
-                self.disableCSVOutput()
-        except usb.core.USBError:
-            print("Caught disconnection event. Test failed.")
-            self.monsoon.Reconnect()
-            self.monsoon.stopSampling()
-        except Exception as e:
-            print("Warning!  Unknown exception caught.  Test ended.")
-            self.monsoon.stopSampling()
-            if(self.__CSVOutEnable):
-                self.__outputToCSV()
-                self.disableCSVOutput()
+                    self.disableCSVOutput()
+            except IOError:
+                print("Caught keyboard interrupt, test ending adruptly.")
+                self.monsoon.stopSampling()
+                if(self.__CSVOutEnable):
+                    self.__outputToCSV()
+                    self.disableCSVOutput()
+            except usb.core.USBError:
+                print("Caught disconnection event. Test restarting with default parameters")
+                self.monsoon.Reconnect()
+                self.monsoon.stopSampling()
+                self.monsoon.StartSampling(samples,granularity)
+            except Exception as e:
+                print("Error: Unknown exception caught.  Test failed.")
+                self.monsoon.stopSampling()
+                if(self.__CSVOutEnable):
+                    self.__outputToCSV()
+                    self.disableCSVOutput()
+                raise Exception(e.args)
+
 
 
