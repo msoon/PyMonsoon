@@ -88,7 +88,7 @@ class USB_protocol(object):
         """Instruct the Power Monitor to enter sample mode.  
         calTime = Amount of time, in ms, between calibration samples.
         maxTime = Number of samples to take before exiting sample mode automatically."""
-        if not self.verifyReady(operation):
+        if not self.verifyReady(0x02):
             self.stopSampling()
             raise ValueError("Power Monitor Error, attempted to start while already started.")
         value_array = struct.unpack("4B",struct.pack("I",calTime))
@@ -99,16 +99,12 @@ class USB_protocol(object):
 
     def getValue(self,operation,valueLength):
         """Get an EEPROM value from the Power Monitor."""
-        if not self.verifyReady(operation):
-            self.stopSampling()
-            raise ValueError("Power Monitor Error, attempted to query Power Monitor while sampling.")
         operation_array = struct.unpack("4b",struct.pack("I",operation))
         wIndex = struct.unpack("H",struct.pack("bb",operation_array[0],0))[0]
         result = self.DEVICE.ctrl_transfer(op.Control_Codes.USB_IN_PACKET,op.Control_Codes.USB_SET_VALUE,0,wIndex,4,5000)
         result = struct.unpack("I",result)[0]
         if(result == op.ReturnCodes.ERROR):
             self.stopSampling()
-            #verifyReady should ensure we never get here, but I'm leaving it in regardless.
             raise ValueError("Error code returned.  Attempted to query Power Monitor while in sample mode.")
         return result
 

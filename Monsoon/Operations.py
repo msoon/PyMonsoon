@@ -35,7 +35,7 @@ class OpCodes:
 class ReturnCodes:
     """Status return codes"""
     #TODO:  Should really consolidate this with a few other misc values.
-    ERROR = 0xfffffffeL
+    ERROR = 0xfffffffE
 class HardwareModel:
     """Hardware Model Types"""
     UNKNOWN = 0

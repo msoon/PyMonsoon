@@ -530,12 +530,6 @@ class SampleEngine:
                 if(self.__CSVOutEnable):
                     self.__outputToCSV()
                     self.disableCSVOutput()
-            except IOError:
-                print("Caught keyboard interrupt, test ending adruptly.")
-                self.monsoon.stopSampling()
-                if(self.__CSVOutEnable):
-                    self.__outputToCSV()
-                    self.disableCSVOutput()
             except usb.core.USBError:
                 print("Caught disconnection event. Test restarting with default parameters")
                 self.monsoon.Reconnect()
