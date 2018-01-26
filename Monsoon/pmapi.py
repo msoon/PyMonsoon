@@ -19,7 +19,7 @@ class USB_protocol(object):
         """Reset the port and reconnect to the power monitor.
         Useful for some cases"""
         self.DEVICE.reset()
-        time.sleep(5) 
+        time.sleep(5)
         #give device time to re-enumerate
         #TODO:  We should be able to replace this with waiting for the event that fires when
         #A new device enumerates on the system.
@@ -50,7 +50,7 @@ class USB_protocol(object):
             try:
                 self.DEVICE.detach_kernel_driver(0)
             except:
-                pass # already unregistered    
+                pass # already unregistered
 
         self.DEVICE.set_configuration()
         cfg = self.DEVICE.get_active_configuration()
@@ -88,7 +88,7 @@ class USB_protocol(object):
         self.DEVICE.ctrl_transfer(op.Control_Codes.USB_OUT_PACKET,op.Control_Codes.USB_REQUEST_STOP,0,0,0,5000)
 
     def startSampling(self,calTime, maxTime):
-        """Instruct the Power Monitor to enter sample mode.  
+        """Instruct the Power Monitor to enter sample mode.
         calTime = Amount of time, in ms, between calibration samples.
         maxTime = Number of samples to take before exiting sample mode automatically."""
         if not self.verifyReady(0x02):
@@ -115,7 +115,7 @@ class USB_protocol(object):
         """Cleanup any loose ends, if present."""
         self.stopSampling()
         usb.util.dispose_resources(self.DEVICE)
-    
+
     def verifyReady(self,opcode):
         """Check whether we're currently in sample mode.
         Some commands can cause errors if we are.
@@ -160,11 +160,11 @@ class CPP_Backend_Protocol(object):
         self.DEVICE.pyStop()
 
     def startSampling(self,calTime, maxTime):
-        """Instruct the Power Monitor to enter sample mode.  
+        """Instruct the Power Monitor to enter sample mode.
         calTime = Amount of time, in ms, between calibration samples.
         maxTime = Number of samples to take before exiting sample mode automatically."""
         self.DEVICE.pyStart(calTime,maxTime)
-        
+
 
     def getValue(self,operation,valueLength):
         """Get an EEPROM value from the Power Monitor."""

@@ -17,7 +17,7 @@ PID = '0xffff'
 
 class bootloaderMonsoon(object):
     def __init__(self,*args, **kwargs):
-        pass    
+        pass
 
     def setup_usb(self):
         """Sets up the USB connection."""
@@ -36,7 +36,7 @@ class bootloaderMonsoon(object):
             try:
                 DEVICE.detach_kernel_driver(0)
             except:
-                pass # already unregistered  
+                pass # already unregistered
         DEVICE.set_configuration()
 
         cfg = DEVICE.get_active_configuration()
@@ -70,7 +70,7 @@ class bootloaderMonsoon(object):
         epBulkWriter.write(sendData,timeout=10000)
         ret = epBulkReader.read(length+5,timeout=10000)
         return ret
-        
+
 
 
 
@@ -84,7 +84,7 @@ class bootloaderMonsoon(object):
             print("Flash written OK")
         #Don't actually erase the EEPROM, this would wipe out all of the calibration data.
         #if(self.writeRegion(op.BootloaderMemoryRegions.EEPROM,op.BootloaderCommands.WriteEEPROM,0x0000,EEPROM,op.BootloaderCommands.ReadEEPROM)):
-        #    print("EEPROM written OK")   
+        #    print("EEPROM written OK")
         if(self.__writeChunk(op.BootloaderMemoryRegions.IDLocs,op.BootloaderCommands.WriteFlash,0x0000,IDlocs,op.BootloaderCommands.ReadFlash)):
             print("IDLocs written OK")
         if(self.__writeChunk(op.BootloaderMemoryRegions.Config,op.BootloaderCommands.WriteConfig,0x0000,Config,op.BootloaderCommands.ReadConfig)):
@@ -208,7 +208,7 @@ class bootloaderMonsoon(object):
             hex_ = hex_[lineEnd+1:len(hex_)]
             lineEnd = hex_.find('\n')
         Flash, EEPROM,IDlocs,Config = self.__formatAsPICFlash(output)
-        return  Flash, EEPROM,IDlocs,Config 
+        return  Flash, EEPROM,IDlocs,Config
 
     def __formatAsPICFlash(self, hex_):
         """Formats an array of hex_ lines as PIC memory regions."""

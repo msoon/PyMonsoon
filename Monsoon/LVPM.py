@@ -93,7 +93,6 @@ class Monsoon(object):
     def setDefaultScaleValues(self):
         """Not implemented for LVPM yet"""
         raise NotImplementedError
-        
     def fillStatusPacket(self):
         """Get all calibration information from the device EEPROM"""
         self.statusPacket.mainFineResistorOffset = float(self.Protocol.getValue(op.OpCodes.setMainFineResistorOffset,1))
