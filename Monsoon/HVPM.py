@@ -45,7 +45,7 @@ class Monsoon(object):
 
     def setVout(self,value):
         vout = value * op.Conversion.FLOAT_TO_INT
-        self.Protocol.sendCommand(op.OpCodes.setMainVoltage,vout) 
+        self.Protocol.sendCommand(op.OpCodes.setMainVoltage,vout)
     def setPowerupTime(self,value):
         self.Protocol.sendCommand(op.OpCodes.setPowerupTime,value)
     def setPowerUpCurrentLimit(self, value):
@@ -70,7 +70,7 @@ class Monsoon(object):
         return serialNumber
 
     def setDefaultScaleValues(self):
-        """Loads default scaling values into the Power Monitor.  
+        """Loads default scaling values into the Power Monitor.
         Warning:  This wipes away existing calibration data.  Use with Caution."""
         #Main channel
         self.Protocol.sendCommand(op.OpCodes.setMainFineScale, 36500)
@@ -101,7 +101,7 @@ class Monsoon(object):
         highbyte = int(min(0xFF,(value-lowbyte) * 2**8)) #Conversion into Q7.8 format
         raw = struct.unpack("H",struct.pack("BB",highbyte,lowbyte))[0]
         return raw
-        
+
 
     def degrees_from_raw(self, value):
         """For setting the fan temperature limit.  Only valid in HVPM"""
@@ -126,8 +126,8 @@ class Monsoon(object):
 
         #Calibration data
         self.statusPacket.mainFineScale = float(self.Protocol.getValue(op.OpCodes.setMainFineScale,2))
-        self.statusPacket.mainCoarseScale = float(self.Protocol.getValue(op.OpCodes.setMainCoarseScale,2)) 
-        self.statusPacket.usbFineScale = float(self.Protocol.getValue(op.OpCodes.setUSBFineScale,2)) 
+        self.statusPacket.mainCoarseScale = float(self.Protocol.getValue(op.OpCodes.setMainCoarseScale,2))
+        self.statusPacket.usbFineScale = float(self.Protocol.getValue(op.OpCodes.setUSBFineScale,2))
         self.statusPacket.usbCoarseScale = float(self.Protocol.getValue(op.OpCodes.setUSBCoarseScale,2))
         self.statusPacket.auxFineScale = float(self.Protocol.getValue(op.OpCodes.setAuxFineScale,2))
         self.statusPacket.auxCoarseScale = float(self.Protocol.getValue(op.OpCodes.setAuxCoarseScale,2))

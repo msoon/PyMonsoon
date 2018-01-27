@@ -46,7 +46,8 @@ class ErrorHandlingModes:
 class SampleEngine:
     def __init__(self, Monsoon,bulkProcessRate=128, errorMode = ErrorHandlingModes.full):
         """Declares global variables.
-        During testing, we found the garbage collector would slow down sampling enough to cause a lot of dropped samples.
+        During testing, we found the garbage collector would slow down sampling enough to cause a
+lot of dropped samples.
         We've tried to combat this by allocating as much as possible in advance."""
         self.monsoon = Monsoon
         self.__errorMode = errorMode
@@ -77,7 +78,7 @@ class SampleEngine:
         self.__mainVoltageIndex = 6
         self.__usbVoltageIndex = 7
         self.__timestampIndex = 10
-       
+
         #Output lists
         self.__mainCurrent = []
         self.__usbCurrent = []
@@ -118,7 +119,7 @@ class SampleEngine:
     def setStartTrigger(self,triggerStyle,triggerLevel):
         """Controls the conditions when the sampleEngine starts recording measurements."""
         """triggerLevel: threshold for trigger start."""
-        """triggerStyle:  GreaterThan or Lessthan.""" 
+        """triggerStyle:  GreaterThan or Lessthan."""
         self.__startTriggerLevel = triggerLevel
         self.__startTriggerStyle = np.vectorize(triggerStyle)
         pass
@@ -126,7 +127,7 @@ class SampleEngine:
     def setStopTrigger(self,triggerstyle,triggerlevel):
         """Controls the conditions when the sampleEngine stops recording measurements."""
         """triggerLevel: threshold for trigger stop."""
-        """triggerStyle:  GreaterThan or Lessthan.""" 
+        """triggerStyle:  GreaterThan or Lessthan."""
         self.__stopTriggerLevel = triggerlevel
         self.__stopTriggerStyle = np.vectorize(triggerstyle)
 
@@ -140,7 +141,7 @@ class SampleEngine:
 
     def enableChannel(self,channel):
         """Enables a channel.  Takes sampleEngine.channel class value as input."""
-        self.__channels[channel] = True 
+        self.__channels[channel] = True
 
 
     def disableChannel(self,channel):
@@ -148,7 +149,8 @@ class SampleEngine:
         self.__channels[channel] = False
 
     def enableCSVOutput(self, filename):
-        """Opens a file and causes the sampleEngine to periodically output samples when taking measurements
+        """Opens a file and causes the sampleEngine to periodically output samples when taking
+measurements
         filename: The file measurements will be output to."""
         self.__outputFilename = filename
         self.__f = open(filename,"w")
@@ -178,12 +180,12 @@ class SampleEngine:
         self.__usbVoltage = []
         self.__mainVoltage = []
         self.__timeStamps = []
-        
+
     def __isCalibrated(self):
         """Returns true if every channel has sufficient calibration samples."""
-        A = self.__mainCal.calibrated()
-        B = self.__usbCal.calibrated()
-        C = self.__auxCal.calibrated()
+        A = self.__mainCal.calibrated
+        B = self.__usbCal.calibrated
+        C = self.__auxCal.calibrated
         return A and B and C
 
     def __addMeasurement(self,channel,measurement):
@@ -191,8 +193,13 @@ class SampleEngine:
             self.__evalStartTrigger(measurement)
         elif(channel == self.__triggerChannel):
             self.__evalStopTrigger(measurement[::self.__granularity])
-        if(channel == channels.MainCurrent):
-            self.__mainCurrent.append(measurement[::self.__granularity])
+
+        measurements = self.__getMeasurement(measurement)
+
+        if(channel == channels.MainCurrent and not self.__stopTriggerSet):
+            self.__mainCurrent.append(measurements)
+            self.__sampleCount += len(measurements)
+
         if(channel == channels.USBCurrent):
             self.__usbCurrent.append(measurement[::self.__granularity])
         if(channel == channels.AuxCurrent):
@@ -204,14 +211,25 @@ class SampleEngine:
         if(channel == channels.timeStamp):
             self.__timeStamps.append(measurement[::self.__granularity])
 
+    def __getMeasurement(self, measurement):
+        measurements = []
+        if ((self.__sampleCount + len(measurement[::self.__granularity])) > self.__sampleLimit):
+            counter = self.__sampleCount
+            for sample in measurement[::self.__granularity]:
+                if (counter >= self.__sampleLimit):
+                    break
+                measurements.append(sample)
+                counter += 1
+        else:
+            measurements = measurement
+        return measurements
+
     def __evalStartTrigger(self, measurement):
         self.__startTriggerStyle(measurement,self.__startTriggerLevel)
         self.__startTriggerSet = np.any(self.__startTriggerStyle(measurement,self.__startTriggerLevel))
 
     def __evalStopTrigger(self,measurement):
-        self.__sampleCount
-        self.__sampleLimit
-        if(self.__sampleCount > self.__sampleLimit and self.__sampleLimit is not triggers.SAMPLECOUNT_INFINITE):
+        if(self.__sampleCount >= self.__sampleLimit and self.__sampleLimit is not triggers.SAMPLECOUNT_INFINITE):
             self.__stopTriggerSet = True
         if(self.__stopTriggerLevel is not triggers.SAMPLECOUNT_INFINITE):
             test = self.__stopTriggerStyle(measurement,self.__stopTriggerLevel)
@@ -236,8 +254,8 @@ class SampleEngine:
                 else:
                     slope = 0
                 Raw = measurements[:,self.__mainCoarseIndex] - zeroOffset
-                mainCoarseCurrents = Raw * slope 
-        
+                mainCoarseCurrents = Raw * slope
+
                 #Main Fine
                 scale = self.monsoon.statusPacket.mainFineScale
                 zeroOffset = self.monsoon.statusPacket.mainFineZeroOffset
@@ -267,7 +285,7 @@ class SampleEngine:
                 else:
                     slope = 0
                 Raw = measurements[:,self.__usbCoarseIndex] - zeroOffset
-                usbCoarseCurrents = Raw * slope 
+                usbCoarseCurrents = Raw * slope
 
                 #USB Fine
                 scale = self.monsoon.statusPacket.usbFineScale
@@ -285,7 +303,7 @@ class SampleEngine:
                 self.__addMeasurement(channels.USBCurrent,usbCurrent)
                 #self.__usbCurrent.append(usbCurrent)
                 sDebug = sDebug + " USB Current: " + repr(round(usbCurrent[0], 2))
-        
+
             if(self.__channels[channels.AuxCurrent]):
                 #Aux Coarse
                 scale = self.monsoon.statusPacket.mainFineScale
@@ -298,7 +316,7 @@ class SampleEngine:
                 else:
                     slope = 0
                 Raw = measurements[:,self.__auxCoarseIndex] - zeroOffset
-                auxCoarseCurrents = Raw * slope 
+                auxCoarseCurrents = Raw * slope
 
                 #Aux Fine
                 scale = self.monsoon.statusPacket.auxFineScale
@@ -322,9 +340,9 @@ class SampleEngine:
                 mainVoltages = measurements[:,self.__mainVoltageIndex] * self.__ADCRatio * self.__mainVoltageScale
                 self.__addMeasurement(channels.MainVoltage,mainVoltages)
                 #self.__mainVoltage.append(mainVoltages)
-                
+
                 sDebug = sDebug + " Main Voltage: " + repr(round(mainVoltages[0],2))
-                
+
 
             if(self.__channels[channels.USBVoltage]):
                 usbVoltages = measurements[:,self.__usbVoltageIndex] * self.__ADCRatio * self.__usbVoltageScale
@@ -360,7 +378,7 @@ class SampleEngine:
                     self.__processRefCal(sample)
                 elif(sampletype == ops.SampleType.Measurement):
                     Samples.append(sample)
-                    
+
                 offset += 10
         return Samples
 
@@ -380,6 +398,7 @@ class SampleEngine:
             print("Error:  Trigger channel not enabled.")
             return False
         return True
+
     def __processZeroCal(self,meas):
         """Adds raw measurement data to the zeroCal tracker"""
         self.__mainCal.addZeroCal(meas[self.__mainCoarseIndex], True)
@@ -400,13 +419,15 @@ class SampleEngine:
         return True
 
     def getSamples(self):
-        """Returns samples in a Python list.  Format is [timestamp, main, usb, aux, mainVolts,usbVolts]."""
+        """Returns samples in a Python list.  Format is [timestamp, main, usb, aux,
+mainVolts,usbVolts]."""
         result = self.__arrangeSamples(True)
         return result
 
     def __outputToCSV(self):
-        """This is intended to be called periodically during sampling.  
-        The alternative is to store measurements in an array or queue, which will overflow allocated memory within a few hours depending on system settings.
+        """This is intended to be called periodically during sampling.
+        The alternative is to store measurements in an array or queue, which will overflow allocated
+memory within a few hours depending on system settings.
         Writes measurements to a CSV file"""
 
         output = self.__arrangeSamples()
@@ -469,27 +490,31 @@ class SampleEngine:
                 self.__f.write((self.__channelnames[i] + ","))
         self.__f.write("\n")
 
-    def __sampleLoop(self,S,Samples,ProcessRate):
+    def __sampleLoop(self, S, Samples, ProcessRate, legacy_timestamp=False):
         buffer = self.monsoon.BulkRead()
         for start in range(0,len(buffer),64):
+            if (self.__stopTriggerSet):
+                break
             buf = buffer[start:start+64]
             Sample = self.monsoon.swizzlePacket(buf)
             numSamples = Sample[2]
-            Sample.append(time.time() - self.__startTime)
+            if (legacy_timestamp):
+                Sample.append(int(time.time()))
+            else:
+                Sample.append(time.time() - self.__startTime)
             Samples[S] = Sample
             S += numSamples
             if(S >= ProcessRate):
                 bulkPackets = self.__processPacket(Samples)
                 if(len(bulkPackets) > 0):
                     self.__vectorProcess(bulkPackets)
-                    self.__sampleCount += len(bulkPackets)
                 S = 0
         return S
 
-    def __startSampling(self, samples=5000,granularity=1):
+    def __startSampling(self, samples=5000, granularity=1, legacy_timestamp=False):
         self.__Reset()
-        self.__sampleLimit = samples
         self.__granularity = granularity
+        self.__sampleLimit = samples
         Samples = [[0 for _ in range(self.__packetSize+1)] for _ in range(self.bulkProcessRate)]
         S = 0
         debugcount = 0
@@ -501,11 +526,11 @@ class SampleEngine:
         if(self.__CSVOutEnable):
             self.outputCSVHeaders()
         self.monsoon.StartSampling(1250,0xFFFFFFFF)
-        if not self.__startupCheck():
+        if not self.__startupCheck(False):
             self.monsoon.stopSampling()
             return False
         while not self.__stopTriggerSet:
-            S = self.__sampleLoop(S,Samples,self.bulkProcessRate)
+            S = self.__sampleLoop(S,Samples,self.bulkProcessRate,legacy_timestamp)
             if(S == 0):
                 csvOutRateLimit = True
             if(S >= csvOutThreshold and self.__CSVOutEnable and self.__startTriggerSet):
@@ -516,15 +541,16 @@ class SampleEngine:
             self.__outputToCSV()
             self.disableCSVOutput()
 
-    def startSampling(self, samples=5000, granularity = 1):
+    def startSampling(self, samples=5000, granularity = 1, legacy_timestamp=False):
         """Starts sampling.
         samples:  Max number of samples before test ends.
-        granularity: Controls the resolution at which samples are stored.  1 = all samples stored, 10 = 1 out of 10 samples stored, etc."""
+        granularity: Controls the resolution at which samples are stored.  1 = all samples stored,
+10 = 1 out of 10 samples stored, etc."""
         if(self.__errorMode == ErrorHandlingModes.off):
             self.__startSampling(samples,granularity)
         else:
             try:
-                self.__startSampling(samples,granularity)
+                self.__startSampling(samples,granularity,legacy_timestamp)
             except KeyboardInterrupt:
                 print("Caught keyboard interrupt, test ending adruptly.")
                 self.monsoon.stopSampling()
@@ -547,6 +573,3 @@ class SampleEngine:
                     self.__outputToCSV()
                     self.disableCSVOutput()
                 raise Exception(e.args)
-
-
-
