@@ -545,9 +545,9 @@ memory within a few hours depending on system settings.
         """Starts sampling.
         samples:  Max number of samples before test ends.
         granularity: Controls the resolution at which samples are stored.  1 = all samples stored,
-10 = 1 out of 10 samples stored, etc."""
+        10 = 1 out of 10 samples stored, etc."""
         if(self.__errorMode == ErrorHandlingModes.off):
-            self.__startSampling(samples,granularity)
+            self.__startSampling(samples,granularity,legacy_timestamp)
         else:
             try:
                 self.__startSampling(samples,granularity,legacy_timestamp)
@@ -561,7 +561,7 @@ memory within a few hours depending on system settings.
                 print("Caught disconnection event. Test restarting with default parameters")
                 self.monsoon.Reconnect()
                 self.monsoon.stopSampling()
-                self.startSampling(samples,granularity)
+                self.startSampling(samples,granularity, legacy_timestamp)
                 if(self.__CSVOutEnable):
                     self.__outputToCSV()
                     self.disableCSVOutput()
