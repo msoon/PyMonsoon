@@ -114,7 +114,9 @@ class USB_protocol(object):
     def closeDevice(self):
         """Cleanup any loose ends, if present."""
         self.stopSampling()
-        usb.util.dispose_resources(self.DEVICE)
+        self.DEVICE.reset() #Releases the bulk endpoint, which dispose_resources apparently doesn't release.
+        usb.util.dispose_resources(self.DEVICE) 
+
 
     def verifyReady(self,opcode):
         """Check whether we're currently in sample mode.
