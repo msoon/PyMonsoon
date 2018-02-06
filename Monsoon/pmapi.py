@@ -44,7 +44,7 @@ class USB_protocol(object):
             print('warning:  Device type mismatch.  Found ' + repr(connectedDeviceType) + " expected " + repr(deviceType))
         firmwareRev = self.getValue(op.OpCodes.FirmwareVersion,1)
         if(firmwareRev is not op.ReturnCodes.CURRENT_FIRMWARE_REV):
-            print('Warning:  Detected firmware revision ' + repr(firmwareRev) + ", current release is " + op.ReturnCodes.CURRENT_FIRMWARE_REV)
+            print('Warning:  Detected firmware revision ' + repr(firmwareRev) + ", current release is " + str(op.ReturnCodes.CURRENT_FIRMWARE_REV))
         # On Linux we need to detach usb HID first
         if "Linux" == platform.system():
             try:

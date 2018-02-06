@@ -40,8 +40,7 @@ class calibrationData(object):
         else:#We shouldn't be calling this at all if we aren't calibrated.
             return 0
     def calibrated(self):
-        return self.coarseRefCalibrated and self.coarseZeroCalibrated and self.fineRefCalibrated and
-self.fineZeroCalibrated
+        return self.coarseRefCalibrated and self.coarseZeroCalibrated and self.fineRefCalibrated and self.fineZeroCalibrated        
     def getRefCal(self, Coarse):
         """Get average reference calibration measurement"""
         if(Coarse):
