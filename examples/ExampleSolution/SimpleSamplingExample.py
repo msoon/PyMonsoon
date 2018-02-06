@@ -10,6 +10,7 @@ def testHVPM(serialno=None,Protocol=pmapi.USB_protocol()):
     HVMON.setup_usb(serialno,Protocol)
     print("HVPM Serial Number: " + repr(HVMON.getSerialNumber()))
     HVMON.fillStatusPacket()
+    HVMON.setPowerUpCurrentLimit(8)
     HVMON.setVout(3)
     HVengine = sampleEngine.SampleEngine(HVMON)
     #Output to CSV
@@ -109,10 +110,12 @@ def testLVPM(serialno=None,Protcol=pmapi.USB_protocol()):
     samples = engine.getSamples()
     Mon.closeDevice();
 
+    
+
 def main():
-    LVPMSerialNo = 60001
-    HVPMSerialNo = 60000
-    testLVPM(LVPMSerialNo,pmapi.USB_protocol())
+    #LVPMSerialNo = 12000
+    HVPMSerialNo = 20488
+    #testLVPM(LVPMSerialNo,pmapi.USB_protocol())
     testHVPM(HVPMSerialNo,pmapi.USB_protocol())
 
 if __name__ == "__main__":

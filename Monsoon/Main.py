@@ -93,8 +93,8 @@ def multiHVPMTest(serialnos):
         p = Process(target=droppedSamplesTest,args=(serial,pmapi.CPP_Backend_Protocol()))
         p.start()
 
-serialnos = [11500, 20019, 20486, 20487]
-multiHVPMTest(serialnos)
+serialnos = [20488]#, 20019, 20486, 20487]
+#multiHVPMTest(serialnos)
 
 
 #testLVPM(60001,pmapi.USB_protocol())
