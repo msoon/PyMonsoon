@@ -35,8 +35,9 @@ class Monsoon(object):
         self.Protocol = Protocol
 
     def amps_from_raw(self,raw):
-        raw = min(raw,1023)
-        result = 8.0*(1.0-(raw/1023.0))
+        offset = 3840.0 # == 0x0F00
+        scale = float((raw - offset) / (65535.0 - offset))
+        result = 15.625 * scale
         return result
 
     def raw_from_amps(self,value):
