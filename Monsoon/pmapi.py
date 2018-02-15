@@ -100,12 +100,21 @@ class USB_protocol(object):
         wIndex = struct.unpack("H",struct.pack("BB",op.Control_Codes.USB_REQUEST_START,0))[0]
         self.DEVICE.ctrl_transfer(op.Control_Codes.USB_OUT_PACKET,op.Control_Codes.USB_REQUEST_START,wValue,wIndex,maxtime_array,1000)
 
-    def getValue(self,operation,valueLength):
+    def getValue(self,operation,valueLength, signed = False):
         """Get an EEPROM value from the Power Monitor."""
         operation_array = struct.unpack("4b",struct.pack("I",operation))
         wIndex = struct.unpack("H",struct.pack("bb",operation_array[0],0))[0]
         result = self.DEVICE.ctrl_transfer(op.Control_Codes.USB_IN_PACKET,op.Control_Codes.USB_SET_VALUE,0,wIndex,4,5000)
-        result = struct.unpack("I",result)[0]
+        #first for allowed negative zero offset values
+        if(valueLength == 4):
+            result = struct.unpack("I",result)[0]
+        elif(valueLength == 2):
+            if(signed):
+                result = struct.unpack("h",result[0:2])[0]
+            else:
+                result = struct.unpack("H",result[0:2])[0]
+        elif(valueLength == 1):
+            result = struct.unpack("B",result[0:1])[0]
         if(result == op.ReturnCodes.ERROR):
             self.stopSampling()
             raise ValueError("Error code returned.  Attempted to query Power Monitor while in sample mode.")

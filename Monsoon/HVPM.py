@@ -114,7 +114,7 @@ class Monsoon(object):
 
         #Misc Status information.
         self.statusPacket.firmwareVersion = self.Protocol.getValue(op.OpCodes.FirmwareVersion,2)
-        self.statusPacket.protocolVersion = self.Protocol.getValue(op.OpCodes.ProtocolVersion,2)
+        self.statusPacket.protocolVersion = self.Protocol.getValue(op.OpCodes.ProtocolVersion,1)
         self.statusPacket.temperature = -1 #Not currently supported.
         self.statusPacket.serialNumber = self.Protocol.getValue(op.OpCodes.getSerialNumber,2)
         self.statusPacket.powerupCurrentLimit = self.amps_from_raw(self.Protocol.getValue(op.OpCodes.SetPowerUpCurrentLimit,2))
@@ -132,10 +132,10 @@ class Monsoon(object):
         self.statusPacket.auxFineScale = float(self.Protocol.getValue(op.OpCodes.setAuxFineScale,2))
         self.statusPacket.auxCoarseScale = float(self.Protocol.getValue(op.OpCodes.setAuxCoarseScale,2))
 
-        self.statusPacket.mainFineZeroOffset = float(self.Protocol.getValue(op.OpCodes.SetMainFineZeroOffset,2))
-        self.statusPacket.mainCoarseZeroOffset = float(self.Protocol.getValue(op.OpCodes.SetMainCoarseZeroOffset,2))
-        self.statusPacket.usbFineZeroOffset = float(self.Protocol.getValue(op.OpCodes.SetUSBFineZeroOffset,2))
-        self.statusPacket.usbCoarseZeroOffset = float(self.Protocol.getValue(op.OpCodes.SetUSBCoarseZeroOffset,2))
+        self.statusPacket.mainFineZeroOffset = float(self.Protocol.getValue(op.OpCodes.SetMainFineZeroOffset,2,True))
+        self.statusPacket.mainCoarseZeroOffset = float(self.Protocol.getValue(op.OpCodes.SetMainCoarseZeroOffset,2,True))
+        self.statusPacket.usbFineZeroOffset = float(self.Protocol.getValue(op.OpCodes.SetUSBFineZeroOffset,2,True))
+        self.statusPacket.usbCoarseZeroOffset = float(self.Protocol.getValue(op.OpCodes.SetUSBCoarseZeroOffset,2,True))
 
 
     def BulkRead(self):
