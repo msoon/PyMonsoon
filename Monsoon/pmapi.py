@@ -43,8 +43,8 @@ class USB_protocol(object):
         if(connectedDeviceType != deviceType):
             print('warning:  Device type mismatch.  Found ' + repr(connectedDeviceType) + " expected " + repr(deviceType))
         firmwareRev = self.getValue(op.OpCodes.FirmwareVersion,1)
-        if(firmwareRev is not op.ReturnCodes.CURRENT_FIRMWARE_REV):
-            print('Warning:  Detected firmware revision ' + repr(firmwareRev) + ", current release is " + op.ReturnCodes.CURRENT_FIRMWARE_REV)
+        if(firmwareRev < op.ReturnCodes.CURRENT_FIRMWARE_REV):
+            print('Warning:  Detected firmware revision ' + repr(firmwareRev) + ", current release is " + repr(op.ReturnCodes.CURRENT_FIRMWARE_REV))
         # On Linux we need to detach usb HID first
         if "Linux" == platform.system():
             try:
@@ -122,8 +122,15 @@ class USB_protocol(object):
         """Check whether we're currently in sample mode.
         Some commands can cause errors if we are.
         Current behavior checks for all opcodes, though there are some specific ones which will not return an error code."""
-        status = self.getValue(op.OpCodes.getStartStatus, 1)
-        return not np.bitwise_and(0x80,status)
+
+        #Only check if the firmware version is 26 or greater
+        #getStartStatus command does not include 'Sample mode' bit before that revision.
+        firmwareRev = self.getValue(op.OpCodes.FirmwareVersion,1)
+        if(firmwareRev >= 26):
+            status = self.getValue(op.OpCodes.getStartStatus, 1)
+            return not np.bitwise_and(0x80,status)
+        else:
+            return True
 
 class CPP_Backend_Protocol(object):
     """Uses C++ backend with libusb.

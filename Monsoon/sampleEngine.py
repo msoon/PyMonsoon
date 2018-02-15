@@ -561,11 +561,12 @@ memory within a few hours depending on system settings.
                 print("Caught disconnection event. Test restarting with default parameters")
                 self.monsoon.Reconnect()
                 self.monsoon.stopSampling()
-                self.startSampling(samples,granularity, legacy_timestamp)
                 if(self.__CSVOutEnable):
                     self.__outputToCSV()
                     self.disableCSVOutput()
                     self.enableCSVOutput(self.__outputFilename)
+                self.startSampling(samples,granularity, legacy_timestamp)
+
             except Exception as e:
                 print("Error: Unknown exception caught.  Test failed.")
                 self.monsoon.stopSampling()
