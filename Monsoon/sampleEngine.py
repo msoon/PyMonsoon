@@ -195,21 +195,20 @@ measurements
             self.__evalStopTrigger(measurement[::self.__granularity])
 
         measurements = self.__getMeasurement(measurement)
-
         if(channel == channels.MainCurrent and not self.__stopTriggerSet):
             self.__mainCurrent.append(measurements)
-            self.__sampleCount += len(measurements)
 
         if(channel == channels.USBCurrent):
-            self.__usbCurrent.append(measurement[::self.__granularity])
+            self.__usbCurrent.append(measurements)
         if(channel == channels.AuxCurrent):
-            self.__auxCurrent.append(measurement[::self.__granularity])
+            self.__auxCurrent.append(measurements)
         if(channel == channels.USBVoltage):
-            self.__usbVoltage.append(measurement[::self.__granularity])
+            self.__usbVoltage.append(measurements)
         if(channel == channels.MainVoltage):
-            self.__mainVoltage.append(measurement[::self.__granularity])
+            self.__mainVoltage.append(measurements)
         if(channel == channels.timeStamp):
-            self.__timeStamps.append(measurement[::self.__granularity])
+            self.__timeStamps.append(measurements)
+            self.__sampleCount += len(measurements)
 
     def __getMeasurement(self, measurement):
         measurements = []
@@ -574,3 +573,48 @@ memory within a few hours depending on system settings.
                     self.__outputToCSV()
                     self.disableCSVOutput()
                 raise Exception(e.args)
+
+
+    def periodicStartSampling(self):
+        """Causes the Power Monitor to enter sample mode, but doesn't actively collect samples.
+        Call periodicCollectSamples() periodically get measurements.
+        """
+        self.__Reset()
+        self.__sampleLimit = triggers.SAMPLECOUNT_INFINITE
+        self.__sampleLimit = triggers.SAMPLECOUNT_INFINITE
+        self.__granularity = 1
+        if(self.__CSVOutEnable):
+            self.outputCSVHeaders()
+        Samples = [[0 for _ in range(self.__packetSize+1)] for _ in range(self.bulkProcessRate)]
+        self.__startTime = time.time()
+        self.monsoon.StartSampling(1250,triggers.SAMPLECOUNT_INFINITE)
+        if not self.__startupCheck():
+            self.monsoon.stopSampling()
+            return False
+        result = self.getSamples()
+        return result
+
+
+    def periodicCollectSamples(self,samples=100,legacy_timestamp = False):
+        """Start sampling with periodicStartSampling(), then call this to collect samples.
+        Returns the most recent measurements made by the Power Monitor."""
+        #TODO:  This normally returns 3-5 samples over the requested number of samples.
+        self.__sampleCount = 0
+        self.__sampleLimit = samples
+        self.__stopTriggerSet = False
+        self.monsoon.BulkRead() #Clear out stale buffer
+        Samples = [[0 for _ in range(self.__packetSize+1)] for _ in range(1)]
+        while not self.__stopTriggerSet:
+            S = self.__sampleLoop(0,Samples,1,legacy_timestamp)
+        if(self.__CSVOutEnable and self.__startTriggerSet):
+            self.__outputToCSV() #Note that this will cause the script to return nothing.
+        result = self.getSamples()
+        return result
+
+    def periodicStopSampling(self, closeCSV=False):
+        """Performs cleanup tasks when finished sampling."""
+        if(self.__CSVOutEnable and self.__startTriggerSet):
+            self.__outputToCSV()
+            if(closeCSV):
+                self.disableCSVOutput()
+        self.monsoon.stopSampling()
