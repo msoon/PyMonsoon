@@ -1,5 +1,4 @@
 import platform
-
 import usb.core
 import usb.util
 import struct
