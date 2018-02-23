@@ -6,8 +6,7 @@
     <ProjectGuid>19bef4c8-e322-4304-8318-38a3ea5273bc</ProjectGuid>
     <ProjectHome>
     </ProjectHome>
-    <StartupFile>
-    </StartupFile>
+    <StartupFile>multiUnitReflashExample.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -29,6 +28,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="multiPMExample.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="multiUnitReflashExample.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="periodicSamplingExample.py" />
