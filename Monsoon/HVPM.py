@@ -10,6 +10,7 @@ import numpy as np
 
 from Monsoon import pmapi
 
+
 class Monsoon(object):
 
     def __init__(self, *args, **kwargs):
@@ -26,6 +27,10 @@ class Monsoon(object):
         self.ADCRatio = (float)(62.5 / 1e6); #Each tick of the ADC represents this much voltage
         self.padding = np.zeros(64)
         pass
+
+    def enumerateDevices(self):
+        temp = pmapi.USB_protocol()
+        return temp.enumerateDevices()
 
     def closeDevice(self):
         self.Protocol.closeDevice();
@@ -161,7 +166,12 @@ class Monsoon(object):
         return measurements
     def Reconnect(self):
         self.Protocol.reconnect(op.HardwareModel.HVPM,self.statusPacket.serialNumber)
-
+    def resetToBootloader(self):
+        """
+        Programmatically reset to bootloader mode.  
+        Reconnect using the interface in reflash.py"""
+        self.Protocol.resetToBootloader()
+        
 
 
 

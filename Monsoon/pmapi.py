@@ -15,6 +15,16 @@ class USB_protocol(object):
     def __init__(self):
         self.DEVICE = None
 
+    def enumerateDevices(self):
+        """Returns a list of the serial numbers of all devices connected to the system.
+        Includes both HVPM LVPM hardware"""
+        results = []
+      
+        devices = usb.core.find(find_all=True, idVendor = 0x2AB9, idProduct = 0x0001)
+        for device in devices:
+            results.append(str(device.serial_number))
+        return results
+
     def reconnect(self,deviceType, serialno):
         """Reset the port and reconnect to the power monitor.
         Useful for some cases"""
@@ -85,6 +95,7 @@ class USB_protocol(object):
 
     def stopSampling(self):
         """Send a control transfer instructing the Power Monitor to stop sampling."""
+        self.verifyReady(0x02)
         self.DEVICE.ctrl_transfer(op.Control_Codes.USB_OUT_PACKET,op.Control_Codes.USB_REQUEST_STOP,0,0,0,5000)
 
     def startSampling(self,calTime, maxTime):
@@ -97,14 +108,27 @@ class USB_protocol(object):
         value_array = struct.unpack("4B",struct.pack("I",calTime))
         maxtime_array = struct.unpack("4B",struct.pack("I",maxTime))
         wValue = struct.unpack("H",struct.pack("BB",value_array[0],value_array[1]))[0]
-        wIndex = struct.unpack("H",struct.pack("BB",op.Control_Codes.USB_REQUEST_START,0))[0]
+        wIndex = struct.unpack("H",struct.pack("BB",0,0))[0]
         self.DEVICE.ctrl_transfer(op.Control_Codes.USB_OUT_PACKET,op.Control_Codes.USB_REQUEST_START,wValue,wIndex,maxtime_array,1000)
+
+    def resetToBootloader(self):
+        wValue = 0
+        wIndex = 0
+        wLength = 0
+        #This will cause a disconnect event, which throws an exception in libusb.
+        try:
+            self.DEVICE.ctrl_transfer(op.Control_Codes.USB_OUT_PACKET,op.Control_Codes.USB_REQUEST_RESET_TO_BOOTLOADER,wValue,wIndex,wLength,1000)
+        except:
+            print("Resetting to bootloader")
 
     def getValue(self,operation,valueLength, signed = False):
         """Get an EEPROM value from the Power Monitor."""
         operation_array = struct.unpack("4b",struct.pack("I",operation))
         wIndex = struct.unpack("H",struct.pack("bb",operation_array[0],0))[0]
         result = self.DEVICE.ctrl_transfer(op.Control_Codes.USB_IN_PACKET,op.Control_Codes.USB_SET_VALUE,0,wIndex,4,5000)
+        if(result == op.ReturnCodes.ERROR):
+            self.stopSampling()
+            raise ValueError("Error code returned.  Attempted to query Power Monitor while in sample mode.")
         if(valueLength == 4):
             if(signed):
                 result = struct.unpack("i",result)[0]
@@ -120,9 +144,6 @@ class USB_protocol(object):
                 result = struct.unpack("b",result[0:1])[0]
             else:
                 result = struct.unpack("B",result[0:1])[0]
-        if(result == op.ReturnCodes.ERROR):
-            self.stopSampling()
-            raise ValueError("Error code returned.  Attempted to query Power Monitor while in sample mode.")
         return result
 
     def closeDevice(self):
@@ -213,5 +234,7 @@ class CPP_Backend_Protocol(object):
         test = ctypes.CDLL(libLocation)
         return test
     def reconnect(self):
+        raise NotImplementedError
+    def findAllSerialNumbers(self):
         raise NotImplementedError
 

@@ -29,6 +29,9 @@ class Monsoon(object):
         self.__padding = np.zeros(64)
         pass
 
+    def enumerateDevices(self):
+        temp = pmapi.USB_protocol()
+        return temp.enumerateDevices()
     def closeDevice(self):
         self.Protocol.closeDevice();
 
@@ -152,6 +155,9 @@ class Monsoon(object):
 
     def Reconnect(self):
         self.Protocol.reconnect(op.HardwareModel.LVPM,self.statusPacket.serialNumber)
+    def resetToBootloader(self):
+        #Generally not supported by LVPM units.
+        self.Protocol.resetToBootloader()
 
 
 

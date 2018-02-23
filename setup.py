@@ -19,7 +19,7 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # http://packaging.python.org/en/latest/tutorial.html#version
-    version='0.1.76',
+    version='0.1.80',
 
     description='Monsoon Power Monitor API',
     long_description=long_description,
@@ -77,13 +77,14 @@ setup(
          'examples':
               ['examples/ExampleSolution/SimpleSamplingExample.py',
                'examples/ExampleSolution/ReflashExample.py',
-	       'examples/ExampleSolution/multiPMExample.py'
+	       'examples/ExampleSolution/multiPMExample.py',
+		   'examples/ExampleSolution/multiUnitReflashExample.py'
               ],
          'docs':
              ['docs/API.pdf',
               'docs/Linux/reflashinstructions.txt',
               'docs/Windows/driverInstall.docx',
-	      'docs/Windows/reflash.docx'
+			  'docs/Windows/reflash.docx'
              ],
 	 'Firmware':
 	 [

@@ -250,3 +250,19 @@ class bootloaderMonsoon(object):
             if(hex(head[0]) == VID and hex(head[1]) == PID):
                 return True
         return False
+
+    def resetToMainSection(self):
+        """
+        Exits bootloader mode and returns to normal mode.
+        This will disconnect the device, and you should reconnect with HVPM.py or LVPM.py, depending on your hardware.
+        Most LVPM units have an older version of the bootloader, and this command may be nonfunctional on them.  
+        In that case, just manually power cycle the unit."""
+        wValue = 0
+        wIndex = 0
+        wLength = 0
+        try:
+            self.__bootCommand(op.BootloaderCommands.Reset,1,[0,0,0],[])
+        except:
+            #This will always throw an exception because it disconnects the device and re-enumerates as a normal Power Monitor
+            print("Resetting to Main Section.")
+

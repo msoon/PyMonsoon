@@ -49,6 +49,8 @@ class Control_Codes:
     USB_REQUEST_START = 0x02
     USB_REQUEST_STOP = 0x03
     USB_SET_VALUE = 0x01
+    USB_REQUEST_RESET_TO_BOOTLOADER = 0xFF
+
 class Conversion:
     """Values used for converting from desktop to the PIC"""
     FLOAT_TO_INT = 1048576
