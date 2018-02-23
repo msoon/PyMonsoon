@@ -17,7 +17,6 @@ def reflashUnit(serialno = None):
     Header, Hex = Ref.getHeaderFromFWM('../../Firmware/debug/HVPM27.fwm')
     if(Ref.verifyHeader(Header)):
         Ref.writeFlash(Hex)
-    Ref.writeFlash(Hex)
     Ref.resetToMainSection()
 
     time.sleep(1) #Gives time for unit re-enumeration.  This may need to be longer on some machines.

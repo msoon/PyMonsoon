@@ -36,6 +36,10 @@ class bootloaderMonsoon(object):
                 DEVICE.detach_kernel_driver(0)
             except:
                 pass # already unregistered
+        DEVICE.set_configuration()
+
+        cfg = DEVICE.get_active_configuration()
+        intf = cfg[(0,0)]
 
         epBulkWriter = usb.util.find_descriptor(
             intf,
