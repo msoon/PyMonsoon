@@ -21,6 +21,8 @@ class bootloaderMonsoon(object):
     def setup_usb(self):
         """Sets up the USB connection."""
         global DEVICE
+        global epBulkWriter
+        global epBulkReader
         global VID
         global PID
 
@@ -34,6 +36,19 @@ class bootloaderMonsoon(object):
                 DEVICE.detach_kernel_driver(0)
             except:
                 pass # already unregistered
+
+        epBulkWriter = usb.util.find_descriptor(
+            intf,
+            custom_match = \
+                lambda e: \
+                usb.util.endpoint_direction(e.bEndpointAddress) == \
+                usb.util.ENDPOINT_OUT)
+        epBulkReader = usb.util.find_descriptor(
+            intf,
+            custom_match = \
+                lambda e: \
+                usb.util.endpoint_direction(e.bEndpointAddress) == \
+                usb.util.ENDPOINT_IN)
 
     def __bootCommand(self,Command,length,address,data):
         """Sends boot command."""
