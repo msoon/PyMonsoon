@@ -47,7 +47,7 @@ class SampleEngine:
     def __init__(self, Monsoon,bulkProcessRate=128, errorMode = ErrorHandlingModes.full):
         """Declares global variables.
         During testing, we found the garbage collector would slow down sampling enough to cause a
-lot of dropped samples.
+        lot of dropped samples.
         We've tried to combat this by allocating as much as possible in advance."""
         self.monsoon = Monsoon
         self.__errorMode = errorMode
@@ -132,25 +132,30 @@ lot of dropped samples.
         self.__stopTriggerStyle = np.vectorize(triggerstyle)
 
     def setTriggerChannel(self, triggerChannel):
-        """Sets channel that controls the trigger."""
+        """Sets channel that controls the trigger.
+        triggerChannel:  selected from sampleEngine.channels"""
+        
         self.__triggerChannel = triggerChannel
 
     def ConsoleOutput(self, boolValue):
-        """Enables or disables the display of realtime measurements"""
+        """Enables or disables the display of realtime measurements
+        boolValue:  True == Enable, False == Disable"""
         self.__outputConsoleMeasurements = boolValue
 
     def enableChannel(self,channel):
-        """Enables a channel.  Takes sampleEngine.channel class value as input."""
+        """Enables a channel.  Takes sampleEngine.channel class value as input.
+        channel: selected from sampleEngine.channels"""
         self.__channels[channel] = True
 
 
     def disableChannel(self,channel):
-        """Disables a channel.  Takes sampleEngine.channel class value as input."""
+        """Disables a channel.  Takes sampleEngine.channel class value as input.
+        channel: selected from sampleEngine.channels"""
         self.__channels[channel] = False
 
     def enableCSVOutput(self, filename):
         """Opens a file and causes the sampleEngine to periodically output samples when taking
-measurements
+        measurements
         filename: The file measurements will be output to."""
         self.__outputFilename = filename
         self.__f = open(filename,"w")
@@ -189,6 +194,10 @@ measurements
         return A and B and C
 
     def __addMeasurement(self,channel,measurement):
+        """Adds measurements to the global list of measurements.
+        channel: selected from sampleEngine.channels
+        measurement:  An 1xn array of measurements.
+        """
         if(channel == self.__triggerChannel and not self.__startTriggerSet):
             self.__evalStartTrigger(measurement)
         elif(channel == self.__triggerChannel):
@@ -224,10 +233,18 @@ measurements
         return measurements
 
     def __evalStartTrigger(self, measurement):
+        """
+        See if any of the measurements meet the conditions to start recording samples.
+        measurement:  a 1xn array.
+        """
         self.__startTriggerStyle(measurement,self.__startTriggerLevel)
         self.__startTriggerSet = np.any(self.__startTriggerStyle(measurement,self.__startTriggerLevel))
 
     def __evalStopTrigger(self,measurement):
+        """
+        See if any of the measurements meet the conditions to stop recording samples.
+        measurement:  a 1xn array of measurements.
+        """
         if(self.__sampleCount >= self.__sampleLimit and self.__sampleLimit is not triggers.SAMPLECOUNT_INFINITE):
             self.__stopTriggerSet = True
         if(self.__stopTriggerLevel is not triggers.SAMPLECOUNT_INFINITE):
@@ -236,7 +253,9 @@ measurements
                 self.__stopTriggerSet = True
 
     def __vectorProcess(self,measurements):
-        """Translates raw ADC measurements into current values."""
+        """Translates raw ADC measurements into current values.
+        measurements:  An nxm array of integers indexed by the global channel index scheme.
+        """
         #Currents
         if(self.__isCalibrated()):
             measurements = np.array(measurements)
@@ -305,7 +324,7 @@ measurements
 
             if(self.__channels[channels.AuxCurrent]):
                 #Aux Coarse
-                scale = self.monsoon.statusPacket.mainFineScale
+                scale = self.monsoon.statusPacket.auxCoarseScale
                 zeroOffset = 0
                 calRef = self.__auxCal.getRefCal(True)
                 calZero = self.__auxCal.getZeroCal(True)
@@ -360,7 +379,8 @@ measurements
 
 
     def __processPacket(self, measurements):
-        """Separates received packets into ZeroCal, RefCal, and measurement samples."""
+        """Separates received packets into ZeroCal, RefCal, and measurement samples.
+        measurements:  an nxm array of swizzled packets from the Power Monitor """
         Samples = []
         for measurement in measurements:
             self.dropped = measurement[0]
@@ -399,7 +419,9 @@ measurements
         return True
 
     def __processZeroCal(self,meas):
-        """Adds raw measurement data to the zeroCal tracker"""
+        """Adds raw measurement data to the zeroCal tracker
+        meas:  Zerocal measurements indexed by the global channel index scheme.
+        """
         self.__mainCal.addZeroCal(meas[self.__mainCoarseIndex], True)
         self.__mainCal.addZeroCal(meas[self.__mainFineIndex], False)
         self.__usbCal.addZeroCal(meas[self.__usbCoarseIndex], True)
@@ -408,7 +430,9 @@ measurements
         self.__auxCal.addZeroCal(meas[self.__auxFineIndex], False)
         return True
     def __processRefCal(self, meas):
-        """Adds raw measurement data to the refcal tracker"""
+        """Adds raw measurement data to the refcal tracker        
+        meas:  RefCal measurements indexed by the global channel index scheme.
+        """
         self.__mainCal.addRefCal(meas[self.__mainCoarseIndex], True)
         self.__mainCal.addRefCal(meas[self.__mainFineIndex], False)
         self.__usbCal.addRefCal(meas[self.__usbCoarseIndex], True)
@@ -418,15 +442,15 @@ measurements
         return True
 
     def getSamples(self):
-        """Returns samples in a Python list.  Format is [timestamp, main, usb, aux,
-mainVolts,usbVolts]."""
+        """Returns samples in a Python list.  Format is: 
+        [timestamp, main, usb, aux,mainVolts,usbVolts]."""
         result = self.__arrangeSamples(True)
         return result
 
     def __outputToCSV(self):
         """This is intended to be called periodically during sampling.
         The alternative is to store measurements in an array or queue, which will overflow allocated
-memory within a few hours depending on system settings.
+        memory within a few hours depending on system settings.
         Writes measurements to a CSV file"""
 
         output = self.__arrangeSamples()
@@ -438,7 +462,9 @@ memory within a few hours depending on system settings.
             self.__f.write(sOut)
 
     def __arrangeSamples(self, exportAllIndices = False):
-        """Arranges output lists so they're a bit easier to process."""
+        """Arranges output lists so they're a bit easier to process.
+        exportAllIndices:  Populates the list with every channel, even if no measurements are stored for that channel.
+        Useful for making sure the indices in sampleEngine.channels match the output from this function."""
         output = []
         times = []
         for data in self.__timeStamps:
@@ -490,6 +516,14 @@ memory within a few hours depending on system settings.
         self.__f.write("\n")
 
     def __sampleLoop(self, S, Samples, ProcessRate, legacy_timestamp=False):
+        """
+        Collects and processes samples in batches.  Numpy makes processing large numbers of samples in batches
+        much faster than processing them as they're received.  Useful in avoiding dropped samples.  
+        S: The number of samples in the current batch.
+        Samples: An array that will be populated with samples.
+        ProcessRate: Number of samples per batch.  Should be a power of 2 for best results.
+        legacy_timestamp:  if true, use time.time() for timestamp instead of currentTime - startTime
+        """
         buffer = self.monsoon.BulkRead()
         for start in range(0,len(buffer),64):
             if (self.__stopTriggerSet):
@@ -511,6 +545,11 @@ memory within a few hours depending on system settings.
         return S
 
     def __startSampling(self, samples=5000, granularity=1, legacy_timestamp=False):
+        """Handle setup for sample collection.
+        samples:  Number of samples to collect, independent of the stop trigger.  sampleEngine.triggers.SAMPLECOUNT_INFINITE to function solely through triggers.
+        granularity:  Samples to store.  1 = 1:1, 10 = store 1 out of every 10 samples, etc.  
+        legacy_timestamp: if true, use time.time() for timestamp instead of currentTime - startTime
+        """
         self.__Reset()
         self.__granularity = granularity
         self.__sampleLimit = samples
@@ -524,7 +563,7 @@ memory within a few hours depending on system settings.
         self.__startTime = time.time()
         if(self.__CSVOutEnable):
             self.outputCSVHeaders()
-        self.monsoon.StartSampling(1250,0xFFFFFFFF)
+        self.monsoon.StartSampling(1250,triggers.SAMPLECOUNT_INFINITE)
         if not self.__startupCheck(False):
             self.monsoon.stopSampling()
             return False
@@ -541,10 +580,11 @@ memory within a few hours depending on system settings.
             self.disableCSVOutput()
 
     def startSampling(self, samples=5000, granularity = 1, legacy_timestamp=False):
-        """Starts sampling.
-        samples:  Max number of samples before test ends.
-        granularity: Controls the resolution at which samples are stored.  1 = all samples stored,
-        10 = 1 out of 10 samples stored, etc."""
+        """Handle setup for sample collection.
+        samples:  Number of samples to collect, independent of the stop trigger.  sampleEngine.triggers.SAMPLECOUNT_INFINITE to function solely through triggers.
+        granularity:  Samples to store.  1 = 1:1, 10 = store 1 out of every 10 samples, etc.  
+        legacy_timestamp: if true, use time.time() for timestamp instead of currentTime - startTime
+        """
         if(self.__errorMode == ErrorHandlingModes.off):
             self.__startSampling(samples,granularity,legacy_timestamp)
         else:
@@ -581,7 +621,6 @@ memory within a few hours depending on system settings.
         """
         self.__Reset()
         self.__sampleLimit = triggers.SAMPLECOUNT_INFINITE
-        self.__sampleLimit = triggers.SAMPLECOUNT_INFINITE
         self.__granularity = 1
         if(self.__CSVOutEnable):
             self.outputCSVHeaders()
@@ -597,7 +636,9 @@ memory within a few hours depending on system settings.
 
     def periodicCollectSamples(self,samples=100,legacy_timestamp = False):
         """Start sampling with periodicStartSampling(), then call this to collect samples.
-        Returns the most recent measurements made by the Power Monitor."""
+        Returns the most recent measurements made by the Power Monitor.
+        samples:  Number of samples to collect.
+        legacy_timestamp: if true, use time.time() for timestamp instead of currentTime - startTime"""
         #TODO:  This normally returns 3-5 samples over the requested number of samples.
         self.__sampleCount = 0
         self.__sampleLimit = samples
@@ -612,7 +653,8 @@ memory within a few hours depending on system settings.
         return result
 
     def periodicStopSampling(self, closeCSV=False):
-        """Performs cleanup tasks when finished sampling."""
+        """Performs cleanup tasks when finished sampling.
+        closeCSV:  Closes the CSV file along with exiting sample mode."""
         if(self.__CSVOutEnable and self.__startTriggerSet):
             self.__outputToCSV()
             if(closeCSV):
