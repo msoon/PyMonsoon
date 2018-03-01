@@ -66,7 +66,7 @@ class bootloaderMonsoon(object):
             sendData.append(data[i])
         for i in range(len(data),length):
             sendData.append(0)
-        epBulkWriter.write(sendData,timeout=10000)
+        test = epBulkWriter.write(sendData,timeout=10000)
         ret = epBulkReader.read(length+5,timeout=10000)
         return ret
 
@@ -249,6 +249,14 @@ class bootloaderMonsoon(object):
             if(hex(head[0]) == VID and hex(head[1]) == PID):
                 return True
         return False
+
+    def getSerialNumber(self):
+        """The bootloader lacks a get command for the serial number, but we can just read the EEPROM value directly with the appropriate boot command"""
+        address = [op.BootloaderMemoryRegions.EEPROM,0,8]#Memory address of the Serial number
+        ret = self.__bootCommand(op.BootloaderCommands.ReadEEPROM,2,address,[])
+        rawSerial = ret[5:7]
+        serialno = struct.unpack('H', struct.pack('B'*2,rawSerial[0],rawSerial[1]))[0]
+        return serialno
 
     def resetToMainSection(self):
         """
