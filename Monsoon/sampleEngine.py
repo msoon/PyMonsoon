@@ -188,9 +188,9 @@ class SampleEngine:
 
     def __isCalibrated(self):
         """Returns true if every channel has sufficient calibration samples."""
-        A = self.__mainCal.calibrated
-        B = self.__usbCal.calibrated
-        C = self.__auxCal.calibrated
+        A = self.__mainCal.calibrated()
+        B = self.__usbCal.calibrated()
+        C = self.__auxCal.calibrated()
         return A and B and C
 
     def __addMeasurement(self,channel,measurement):

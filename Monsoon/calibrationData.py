@@ -38,7 +38,7 @@ class calibrationData(object):
         if(self.calibrated()):
             return sum(list)/len(list)
         else:#We shouldn't be calling this at all if we aren't calibrated.
-            return 0
+            raise ValueError("Attempted to get calibration data when not calibrated.")
     def calibrated(self):
         return self.coarseRefCalibrated and self.coarseZeroCalibrated and self.fineRefCalibrated and self.fineZeroCalibrated
     def getRefCal(self, Coarse):
