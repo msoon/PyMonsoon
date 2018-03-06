@@ -44,7 +44,7 @@ class ErrorHandlingModes:
     debug = 2 #Handle errors + output logging data.  Not fully implemented yet.
 
 class SampleEngine:
-    def __init__(self, Monsoon,bulkProcessRate=128, errorMode = ErrorHandlingModes.full):
+    def __init__(self, Monsoon,bulkProcessRate=128, errorMode = ErrorHandlingModes.full, calsToKeep=5):
         """Declares global variables.
         During testing, we found the garbage collector would slow down sampling enough to cause a
         lot of dropped samples.
@@ -55,9 +55,9 @@ class SampleEngine:
             os.environ['PYUSB_DEBUG'] = 'debug'
             os.environ['PYUSB_LOG_FILENAME'] = 'pyusb.log'
             usb._setup_log()
-        self.__mainCal = calibrationData()
-        self.__usbCal = calibrationData()
-        self.__auxCal = calibrationData()
+        self.__mainCal = calibrationData(calsToKeep)
+        self.__usbCal = calibrationData(calsToKeep)
+        self.__auxCal = calibrationData(calsToKeep)
         self.__padding = np.zeros((64))
         self.__fineThreshold = Monsoon.fineThreshold
         self.__auxFineThreshold = Monsoon.auxFineThreshold
@@ -544,7 +544,7 @@ class SampleEngine:
                 S = 0
         return S
 
-    def __startSampling(self, samples=5000, granularity=1, legacy_timestamp=False):
+    def __startSampling(self, samples=5000, granularity=1, legacy_timestamp=False, calTime = 1250):
         """Handle setup for sample collection.
         samples:  Number of samples to collect, independent of the stop trigger.  sampleEngine.triggers.SAMPLECOUNT_INFINITE to function solely through triggers.
         granularity:  Samples to store.  1 = 1:1, 10 = store 1 out of every 10 samples, etc.  
@@ -563,7 +563,7 @@ class SampleEngine:
         self.__startTime = time.time()
         if(self.__CSVOutEnable):
             self.outputCSVHeaders()
-        self.monsoon.StartSampling(1250,triggers.SAMPLECOUNT_INFINITE)
+        self.monsoon.StartSampling(calTime,triggers.SAMPLECOUNT_INFINITE)
         if not self.__startupCheck(False):
             self.monsoon.stopSampling()
             return False
@@ -579,7 +579,7 @@ class SampleEngine:
             self.__outputToCSV()
             self.disableCSVOutput()
 
-    def startSampling(self, samples=5000, granularity = 1, legacy_timestamp=False):
+    def startSampling(self, samples=5000, granularity = 1, legacy_timestamp=False, calTime = 1250):
         """Handle setup for sample collection.
         samples:  Number of samples to collect, independent of the stop trigger.  sampleEngine.triggers.SAMPLECOUNT_INFINITE to function solely through triggers.
         granularity:  Samples to store.  1 = 1:1, 10 = store 1 out of every 10 samples, etc.  
@@ -589,7 +589,7 @@ class SampleEngine:
             self.__startSampling(samples,granularity,legacy_timestamp)
         else:
             try:
-                self.__startSampling(samples,granularity,legacy_timestamp)
+                self.__startSampling(samples,granularity,legacy_timestamp,calTime)
             except KeyboardInterrupt:
                 print("Caught keyboard interrupt, test ending adruptly.")
                 self.monsoon.stopSampling()
@@ -604,7 +604,7 @@ class SampleEngine:
                     self.__outputToCSV()
                     self.disableCSVOutput()
                     self.enableCSVOutput(self.__outputFilename)
-                self.startSampling(samples,granularity, legacy_timestamp)
+                self.startSampling(samples,granularity, legacy_timestamp,calTime)
 
             except Exception as e:
                 print("Error: Unknown exception caught.  Test failed.")
