@@ -615,7 +615,7 @@ class SampleEngine:
                 raise Exception(e.args)
 
 
-    def periodicStartSampling(self):
+    def periodicStartSampling(self,calTime=1250):
         """Causes the Power Monitor to enter sample mode, but doesn't actively collect samples.
         Call periodicCollectSamples() periodically get measurements.
         """
@@ -626,7 +626,7 @@ class SampleEngine:
             self.outputCSVHeaders()
         Samples = [[0 for _ in range(self.__packetSize+1)] for _ in range(self.bulkProcessRate)]
         self.__startTime = time.time()
-        self.monsoon.StartSampling(1250,triggers.SAMPLECOUNT_INFINITE)
+        self.monsoon.StartSampling(calTime,triggers.SAMPLECOUNT_INFINITE)
         if not self.__startupCheck():
             self.monsoon.stopSampling()
             return False
