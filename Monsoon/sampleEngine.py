@@ -14,6 +14,8 @@ import signal
 import sys
 import usb
 import os
+import scipy as sp
+import scipy.stats
 
 class channels:
     timeStamp = 0
@@ -574,6 +576,8 @@ class SampleEngine:
             if(S >= csvOutThreshold and self.__CSVOutEnable and self.__startTriggerSet):
                 self.__outputToCSV()
                 csvOutRateLimit = False
+            if(S == 0):
+                Samples = [[0 for _ in range(self.__packetSize+1)] for _ in range(self.bulkProcessRate)]
         self.monsoon.stopSampling()
         if(self.__CSVOutEnable):
             self.__outputToCSV()
@@ -660,3 +664,4 @@ class SampleEngine:
             if(closeCSV):
                 self.disableCSVOutput()
         self.monsoon.stopSampling()
+
