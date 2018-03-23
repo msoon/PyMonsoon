@@ -40,13 +40,13 @@ class Monsoon(object):
         self.Protocol = Protocol
 
 
-    def __amps_from_raw(self,raw):
+    def amps_from_raw(self,raw):
         """Translate EEPROM overcurrent protection value setting into amps."""
         raw = min(raw,1023)
         result = 8.0*(1.0-(raw/1023.0))
         return result
 
-    def __raw_from_amps(self,amps):
+    def raw_from_amps(self,amps):
         """Translate amp setting for overcurrent protection into EEPROM value"""
         result = 1023 * (1.0 - (amps/8.0))
         return result
@@ -98,6 +98,19 @@ class Monsoon(object):
         raise NotImplementedError
     def fillStatusPacket(self):
         """Get all calibration information from the device EEPROM"""
+
+        #Misc Status information.
+        self.statusPacket.firmwareVersion = self.Protocol.getValue(op.OpCodes.FirmwareVersion,2)
+        self.statusPacket.protocolVersion = self.Protocol.getValue(op.OpCodes.ProtocolVersion,1)
+        self.statusPacket.temperature = -1 #Not currently supported.
+        self.statusPacket.serialNumber = self.Protocol.getValue(op.OpCodes.getSerialNumber,2)
+        self.statusPacket.powerupCurrentLimit = self.amps_from_raw(self.Protocol.getValue(op.OpCodes.SetPowerUpCurrentLimit,2))
+        self.statusPacket.runtimeCurrentLimit = self.amps_from_raw(self.Protocol.getValue(op.OpCodes.SetRunCurrentLimit,2))
+        self.statusPacket.powerupTime = self.Protocol.getValue(op.OpCodes.setPowerupTime,1)
+        self.statusPacket.usbPassthroughMode = self.Protocol.getValue(op.OpCodes.setUsbPassthroughMode,1)
+        self.statusPacket.hardwareModel = self.Protocol.getValue(op.OpCodes.HardwareModel,2)
+
+        #Calibration data
         self.statusPacket.mainFineResistorOffset = float(self.Protocol.getValue(op.OpCodes.setMainFineResistorOffset,1))
         mainFineResistor = self.factoryRes + self.statusPacket.mainFineResistorOffset * 0.0001
         self.statusPacket.mainCoarseResistorOffset = float(self.Protocol.getValue(op.OpCodes.setMainCoarseResistorOffset,1))
@@ -111,7 +124,7 @@ class Monsoon(object):
         self.statusPacket.auxCoarseResistorOffset = float(self.Protocol.getValue(op.OpCodes.setAuxCoarseResistorOffset,1))
         auxCoarseResistor = self.auxFactoryResistor + self.statusPacket.auxCoarseResistorOffset * 0.0001
 
-
+        #LVPM Scaling system.
         self.statusPacket.mainFineScale = 35946.0 * (self.factoryRes / mainFineResistor)
         self.statusPacket.mainCoarseScale = 3103.4 * (self.factoryRes / mainCoarseResistor)
         self.statusPacket.usbFineScale = 35946.0 * (self.factoryRes / usbFineResistor)
@@ -119,6 +132,7 @@ class Monsoon(object):
         self.statusPacket.auxFineScale = 0.05049 * (self.auxFactoryResistor / auxFineResistor)
         self.statusPacket.auxCoarseScale = 1.289 * (self.auxFactoryResistor / auxCoarseResistor)
 
+        #LVPM units don't use zero offset information.
         self.statusPacket.mainFineZeroOffset = 0
         self.statusPacket.mainCoarseZeroOffset = 0
         self.statusPacket.usbFineZeroOffset = 0
