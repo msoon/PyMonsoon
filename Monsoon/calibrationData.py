@@ -34,7 +34,6 @@ class calibrationData(object):
         self.fineZeroCalibrated = False
 
     def __getCal(self, list):
-
         if(self.calibrated()):
             return sum(list)/len(list)
         else:#We shouldn't be calling this at all if we aren't calibrated.
@@ -58,7 +57,7 @@ class calibrationData(object):
         return self.__getCal(list)
 
 
-    def __addCal(self, list,value,index):
+    def __addCal(self, list, value, index):
 
         list[index] = value
 

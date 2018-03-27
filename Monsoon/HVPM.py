@@ -50,6 +50,7 @@ class Monsoon(object):
         return result
 
     def setVout(self,value):
+        self.__checkDacValues()
         vout = value * op.Conversion.FLOAT_TO_INT
         self.Protocol.sendCommand(op.OpCodes.setMainVoltage,vout)
     def setPowerupTime(self,value):
@@ -91,6 +92,38 @@ class Monsoon(object):
         #Aux channel
         self.Protocol.sendCommand(op.OpCodes.setAuxFineScale,3100)
         self.Protocol.sendCommand(op.OpCodes.setAuxCoarseScale,250)
+    
+    def setMainFineScale(self,value):
+        self.Protocol.sendCommand(op.OpCodes.setMainFineScale, value)
+
+    def setMainFineZeroOffset(self,value):
+        self.Protocol.sendCommand(op.OpCodes.SetMainFineZeroOffset, value)
+
+    def setMainCoarseScale(self,value):
+        self.Protocol.sendCommand(op.OpCodes.setMainCoarseScale,value)
+
+    def setMainCoarseZeroOffset(self,value):
+        self.Protocol.sendCommand(op.OpCodes.SetMainCoarseZeroOffset,value)
+
+
+    def setUSBFineScale(self,value):
+         self.Protocol.sendCommand(op.OpCodes.setUSBFineScale,value)
+
+    def setUSBFineZeroOffset(self,value):
+        self.Protocol.sendCommand(op.OpCodes.SetUSBFineZeroOffset,value)
+
+    def setUSBCoarseScale(self,value):
+        self.Protocol.sendCommand(op.OpCodes.setUSBCoarseScale,value)
+
+    def setUSBCoarseZeroOffset(self,value):
+        self.Protocol.sendCommand(op.OpCodes.SetUSBCoarseZeroOffset,value)
+
+    def setAuxFineScale(self,value):
+        self.Protocol.sendCommand(op.OpCodes.setAuxFineScale,value)
+
+    def setAuxCoarseScale(self,value):
+        self.Protocol.sendCommand(op.OpCodes.setAuxCoarseScale,value)
+
 
     def getVoltageChannel(self):
         return(self.Protocol.getValue(op.OpCodes.setVoltageChannel,1))
@@ -116,6 +149,27 @@ class Monsoon(object):
         result = bytes_[1] + (bytes_[0] * 2**-8)
         return result
 
+    def calibrateVoltage(self):
+        self.Protocol.sendCommand(op.OpCodes.calibrateMainVoltage,0)
+    
+    def __checkDacValues(self):
+        dacCalHigh = self.Protocol.getValue(op.OpCodes.dacCalHigh,2)
+        dacCalLow = self.Protocol.getValue(op.OpCodes.dacCalLow,2)
+        self.__checkDacCalHigh(dacCalHigh)
+        self.__checkDacCalLow(dacCalLow)
+
+    def __checkDacCalLow(self, value):
+        #Note, these tolerances may be too tight, but due to the severe nature of the bug; better safe than sorry.
+        if(value <= 0xE000 or value >= 0xF000):
+            raise ValueError("dacCalLow out of tolerance.  Recommend running HVPM.calibrateVoltage()")
+
+    def __checkDacCalHigh(self,value):
+        #Note, these tolerances may be too tight, but due to the severe nature of the bug; better safe than sorry.
+        a = value <= 0xC000
+        b = value >= 0xD000
+        if(value <= 0xC000 or value >= 0xD000):
+            raise ValueError("dacCalHigh out of tolerance.  Recommend running HVPM.calibrateVoltage()")
+
     def fillStatusPacket(self):
 
         #Misc Status information.
@@ -129,6 +183,11 @@ class Monsoon(object):
         self.statusPacket.temperatureLimit = self.degrees_from_raw(self.Protocol.getValue(op.OpCodes.setTemperatureLimit,2))
         self.statusPacket.usbPassthroughMode = self.Protocol.getValue(op.OpCodes.setUsbPassthroughMode,1)
         self.statusPacket.hardwareModel = self.Protocol.getValue(op.OpCodes.HardwareModel,2)
+
+        self.statusPacket.dacCalHigh = self.Protocol.getValue(op.OpCodes.dacCalHigh,2)
+        self.statusPacket.dacCalLow = self.Protocol.getValue(op.OpCodes.dacCalLow,2)
+
+        
 
         #Calibration data
         self.statusPacket.mainFineScale = float(self.Protocol.getValue(op.OpCodes.setMainFineScale,2))
