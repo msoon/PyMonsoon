@@ -50,7 +50,7 @@ class Monsoon(object):
         return result
 
     def setVout(self,value):
-        self.__checkDacValues()
+        self.checkDacValues()
         vout = value * op.Conversion.FLOAT_TO_INT
         self.Protocol.sendCommand(op.OpCodes.setMainVoltage,vout)
     def setPowerupTime(self,value):
@@ -152,7 +152,7 @@ class Monsoon(object):
     def calibrateVoltage(self):
         self.Protocol.sendCommand(op.OpCodes.calibrateMainVoltage,0)
     
-    def __checkDacValues(self):
+    def checkDacValues(self):
         dacCalHigh = self.Protocol.getValue(op.OpCodes.dacCalHigh,2)
         dacCalLow = self.Protocol.getValue(op.OpCodes.dacCalLow,2)
         self.__checkDacCalHigh(dacCalHigh)
@@ -165,8 +165,6 @@ class Monsoon(object):
 
     def __checkDacCalHigh(self,value):
         #Note, these tolerances may be too tight, but due to the severe nature of the bug; better safe than sorry.
-        a = value <= 0xC000
-        b = value >= 0xD000
         if(value <= 0xC000 or value >= 0xD000):
             raise ValueError("dacCalHigh out of tolerance.  Recommend running HVPM.calibrateVoltage()")
 
