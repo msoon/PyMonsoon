@@ -67,7 +67,7 @@ class SampleEngine:
         self.__mainVoltageScale = Monsoon.mainvoltageScale
         self.__usbVoltageScale = Monsoon.usbVoltageScale
         self.dropped = 0
-        self.bulkProcessRate = 128
+        self.bulkProcessRate = bulkProcessRate 
         self.__packetSize = 64
         self.__startTime = time.time()
         #Indices
@@ -546,7 +546,7 @@ class SampleEngine:
                 S = 0
         return S
 
-    def __startSampling(self, samples=5000, granularity=1, legacy_timestamp=False, calTime = 1250):
+    def __startSampling(self, samples=5000, granularity=1, legacy_timestamp=False, calTime = 1250, output_callback=None):
         """Handle setup for sample collection.
         samples:  Number of samples to collect, independent of the stop trigger.  sampleEngine.triggers.SAMPLECOUNT_INFINITE to function solely through triggers.
         granularity:  Samples to store.  1 = 1:1, 10 = store 1 out of every 10 samples, etc.  
@@ -576,6 +576,8 @@ class SampleEngine:
             if(S >= csvOutThreshold and self.__CSVOutEnable and self.__startTriggerSet):
                 self.__outputToCSV()
                 csvOutRateLimit = False
+            if output_callback:
+              output_callback(self.__arrangeSamples())
             if(S == 0):
                 Samples = [[0 for _ in range(self.__packetSize+1)] for _ in range(self.bulkProcessRate)]
         self.monsoon.stopSampling()
@@ -583,17 +585,17 @@ class SampleEngine:
             self.__outputToCSV()
             self.disableCSVOutput()
 
-    def startSampling(self, samples=5000, granularity = 1, legacy_timestamp=False, calTime = 1250):
+    def startSampling(self, samples=5000, granularity = 1, legacy_timestamp=False, calTime = 1250, output_callback=None):
         """Handle setup for sample collection.
         samples:  Number of samples to collect, independent of the stop trigger.  sampleEngine.triggers.SAMPLECOUNT_INFINITE to function solely through triggers.
         granularity:  Samples to store.  1 = 1:1, 10 = store 1 out of every 10 samples, etc.  
         legacy_timestamp: if true, use time.time() for timestamp instead of currentTime - startTime
         """
         if(self.__errorMode == ErrorHandlingModes.off):
-            self.__startSampling(samples,granularity,legacy_timestamp)
+            self.__startSampling(samples,granularity,legacy_timestamp,output_callback=output_callback)
         else:
             try:
-                self.__startSampling(samples,granularity,legacy_timestamp,calTime)
+                self.__startSampling(samples,granularity,legacy_timestamp,calTime,output_callback)
             except KeyboardInterrupt:
                 print("Caught keyboard interrupt, test ending adruptly.")
                 self.monsoon.stopSampling()
@@ -608,7 +610,7 @@ class SampleEngine:
                     self.__outputToCSV()
                     self.disableCSVOutput()
                     self.enableCSVOutput(self.__outputFilename)
-                self.startSampling(samples,granularity, legacy_timestamp,calTime)
+                self.startSampling(samples,granularity, legacy_timestamp,calTime,output_callback)
 
             except Exception as e:
                 print("Error: Unknown exception caught.  Test failed.")
