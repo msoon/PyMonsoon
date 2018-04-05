@@ -7,8 +7,8 @@ import struct
 from Monsoon import Operations as op
 
 import numpy as np
-
-from Monsoon import pmapi
+import pmapi
+#from Monsoon import pmapi
 
 
 class Monsoon(object):
@@ -50,7 +50,12 @@ class Monsoon(object):
         return result
 
     def setVout(self,value):
+        #Check for overvoltage issue.
+        #We've identified an issue with some units where these values are not set properly at the factory.
+        #This can cause wildly inaccurate vout settings.  
+        #if this fails, update to firmware Rev 32, and run HVPM.calibrateVoltage()
         self.checkDacValues()
+        #End check
         vout = value * op.Conversion.FLOAT_TO_INT
         self.Protocol.sendCommand(op.OpCodes.setMainVoltage,vout)
     def setPowerupTime(self,value):
@@ -153,18 +158,22 @@ class Monsoon(object):
         self.Protocol.sendCommand(op.OpCodes.calibrateMainVoltage,0)
     
     def checkDacValues(self):
+        #Check for overvoltage issue.
+        #We've identified an issue with some units where these values are not set properly at the factory.
+        #This can cause wildly inaccurate vout settings.  
+        #if this fails, update to firmware Rev 32, and run HVPM.calibrateVoltage()
         dacCalHigh = self.Protocol.getValue(op.OpCodes.dacCalHigh,2)
         dacCalLow = self.Protocol.getValue(op.OpCodes.dacCalLow,2)
         self.__checkDacCalHigh(dacCalHigh)
         self.__checkDacCalLow(dacCalLow)
 
     def __checkDacCalLow(self, value):
-        #Note, these tolerances may be too tight, but due to the severe nature of the bug; better safe than sorry.
+        #Note, these tolerances may be too tight, but due to the severe nature of the bug, better safe than sorry.
         if(value <= 0xE000 or value >= 0xF000):
             raise ValueError("dacCalLow out of tolerance.  Recommend running HVPM.calibrateVoltage()")
 
     def __checkDacCalHigh(self,value):
-        #Note, these tolerances may be too tight, but due to the severe nature of the bug; better safe than sorry.
+        #Note, these tolerances may be too tight, but due to the severe nature of the bug, better safe than sorry.
         if(value <= 0xC000 or value >= 0xD000):
             raise ValueError("dacCalHigh out of tolerance.  Recommend running HVPM.calibrateVoltage()")
 
