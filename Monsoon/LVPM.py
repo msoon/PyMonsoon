@@ -149,7 +149,7 @@ class Monsoon(object):
         swizzledPacket = swizzledPacket[0:58]
         packetLength = len(swizzledPacket)
         rawBytes = struct.pack('b'*packetLength,*swizzledPacket)
-        measurements = struct.unpack("HBBhhhhhhHHBBhhhhhhhHBBhhhhhhhHBB",rawBytes)
+        measurements = struct.unpack("HBBhhhhhhHHBBhhhhhhHHBBhhhhhhHHBB",rawBytes)
         measurements = list(measurements)
         return measurements
 
