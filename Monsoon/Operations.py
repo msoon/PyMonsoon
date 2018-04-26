@@ -30,6 +30,8 @@ class OpCodes:
     ProtocolVersion = 0xC1 #Read-only, gets the Protocol version
     HardwareModel = 0x45 #0 = unknown, 1 = LV, 2 = HV
     getStartStatus = 0xC4 
+    dacCalLow = 0x88 #2.5V ADC Reference Calibration
+    dacCalHigh = 0x89 #4.096V ADC Reference Calibration
     Stop = 0xFF
 
 class ReturnCodes:
@@ -97,6 +99,8 @@ class statusPacket:
     auxFineResistorOffset = 0 #signed, ohms = 0.10 + 0.0001*offset
     auxCoarseResistorOffset = 0 #signed, ohms = 0.10 + 0.0001*offset
 
+    dacCalLow = 0
+    dacCalHigh = 0
 
 class BootloaderCommands:
     """Bootloader opcodes.  Used when reflashing the Power Monitor"""
