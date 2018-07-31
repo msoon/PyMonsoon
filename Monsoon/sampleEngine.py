@@ -101,7 +101,9 @@ class SampleEngine:
         self.__channelnames = ["Time(ms)","Main(mA)", "USB(mA)", "Aux(mA)", "Main Voltage(V)", "USB Voltage(V)"]
         self.__channelOutputs = [self.__mainCurrent,self.__usbCurrent,self.__auxCurrent,self.__mainVoltage,self.__usbVoltage]
         self.__sampleCount = 0
+        self.__outputCheckNum = 0
         self.__CSVOutEnable = False
+
 
         #Trigger Settings
         self.__startTriggerSet = False
@@ -200,6 +202,8 @@ class SampleEngine:
         channel: selected from sampleEngine.channels
         measurement:  An 1xn array of measurements.
         """
+        #self.__tracker += 1
+
         if(channel == self.__triggerChannel and not self.__startTriggerSet):
             self.__evalStartTrigger(measurement)
         elif(channel == self.__triggerChannel):
@@ -371,13 +375,17 @@ class SampleEngine:
                 sDebug = sDebug + " USB Voltage: " + repr(round(usbVoltages[0],2))
             timeStamp = measurements[:,self.__timestampIndex]
             self.__addMeasurement(channels.timeStamp,timeStamp)
+
             #self.__timeStamps.append(timeStamp)
             sDebug = sDebug + " Dropped: " + repr(self.dropped)
             sDebug = sDebug + " Total Sample Count: " + repr(self.__sampleCount)
+
             if(self.__outputConsoleMeasurements):
                 print(sDebug)
+
             if not self.__startTriggerSet:
                 self.__ClearOutput()
+
 
 
     def __processPacket(self, measurements):
@@ -456,12 +464,16 @@ class SampleEngine:
         Writes measurements to a CSV file"""
 
         output = self.__arrangeSamples()
-        for i in range(len(output[0])):
-            sOut = ""
-            for j in range(len(output)):
-                sOut = sOut + repr(output[j][i]) + ","
-            sOut = sOut + "\n"
-            self.__f.write(sOut)
+        if len(output[0]) != 0 and len(output[1]) != 0 and len(output[2]) != 0:
+            self.__outputCheckNum = self.__outputCheckNum + len(output[0])
+            if self.__outputCheckNum > self.__granularity:
+                for i in range(int(self.__outputCheckNum / self.__granularity)):
+                    sOut = ""
+                    for j in range(len(output)):
+                        sOut = sOut + repr(output[j][i]) + ","
+                    sOut = sOut + "\n"
+                    self.__f.write(sOut)
+                self.__outputCheckNum = (self.__outputCheckNum % self.__granularity)
 
     def __arrangeSamples(self, exportAllIndices = False):
         """Arranges output lists so they're a bit easier to process.
@@ -595,7 +607,7 @@ class SampleEngine:
             try:
                 self.__startSampling(samples,granularity,legacy_timestamp,calTime)
             except KeyboardInterrupt:
-                print("Caught keyboard interrupt, test ending adruptly.")
+                print("Caught keyboard interrupt, test ending abruptly.")
                 self.monsoon.stopSampling()
                 if(self.__CSVOutEnable):
                     self.__outputToCSV()
