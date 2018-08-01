@@ -201,8 +201,7 @@ class SampleEngine:
         """Adds measurements to the global list of measurements.
         channel: selected from sampleEngine.channels
         measurement:  An 1xn array of measurements.
-        """
-        #self.__tracker += 1
+        """       
 
         if(channel == self.__triggerChannel and not self.__startTriggerSet):
             self.__evalStartTrigger(measurement)
@@ -465,7 +464,7 @@ class SampleEngine:
 
         output = self.__arrangeSamples()
         if len(output[0]) != 0 and len(output[1]) != 0 and len(output[2]) != 0:
-            self.__outputCheckNum = self.__outputCheckNum + len(output[0])
+            self.__outputCheckNum += len(output[0])
             if self.__outputCheckNum > self.__granularity:
                 for i in range(int(self.__outputCheckNum / self.__granularity)):
                     sOut = ""
