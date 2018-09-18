@@ -7,8 +7,8 @@ import struct
 from Monsoon import Operations as op
 
 import numpy as np
-import pmapi
-#from Monsoon import pmapi
+#import pmapi
+from Monsoon import pmapi
 
 
 class Monsoon(object):
@@ -169,7 +169,7 @@ class Monsoon(object):
 
     def __checkDacCalLow(self, value):
         #Note, these tolerances may be too tight, but due to the severe nature of the bug, better safe than sorry.
-        if(value <= 0xE000 or value >= 0xF000):
+        if(value <= 0xD000 or value >= 0xF000):
             raise ValueError("dacCalLow out of tolerance.  Recommend running HVPM.calibrateVoltage()")
 
     def __checkDacCalHigh(self,value):
@@ -208,6 +208,11 @@ class Monsoon(object):
         self.statusPacket.mainCoarseZeroOffset = float(self.Protocol.getValue(op.OpCodes.SetMainCoarseZeroOffset,2,True))
         self.statusPacket.usbFineZeroOffset = float(self.Protocol.getValue(op.OpCodes.SetUSBFineZeroOffset,2,True))
         self.statusPacket.usbCoarseZeroOffset = float(self.Protocol.getValue(op.OpCodes.SetUSBCoarseZeroOffset,2,True))
+
+        #self.statusPacket.mainFineZeroOffset = float(self.Protocol.getValue(op.OpCodes.SetMainFineZeroOffset, 2))
+        #self.statusPacket.mainCoarseZeroOffset = float(self.Protocol.getValue(op.OpCodes.SetMainCoarseZeroOffset, 2))
+        #self.statusPacket.usbFineZeroOffset = float(self.Protocol.getValue(op.OpCodes.SetUSBFineZeroOffset, 2))
+        #self.statusPacket.usbCoarseZeroOffset = float(self.Protocol.getValue(op.OpCodes.SetUSBCoarseZeroOffset, 2))
 
 
     def BulkRead(self):
