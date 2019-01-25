@@ -19,7 +19,7 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # http://packaging.python.org/en/latest/tutorial.html#version
-    version='0.1.87',
+    version='0.1.88',
 
     description='Monsoon Power Monitor API',
     long_description=long_description,
@@ -28,8 +28,8 @@ setup(
     url='https://github.com/msoon/PyMonsoon',
 
     # Author details
-    author='Michael Brinker',
-    author_email='mikeb@msoon.com',
+    author='Michael Brinker, Jared Hicks',
+    author_email='mikeb@msoon.com, jared@msoon.com',
 
     # Choose your license
     license='MIT',

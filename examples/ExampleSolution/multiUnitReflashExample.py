@@ -14,7 +14,7 @@ def reflashUnit(serialno = None):
     time.sleep(1) #Gives time for unit re-enumeration.  This may need to be longer on some machines.
     Ref = reflash.bootloaderMonsoon()
     Ref.setup_usb()
-    Header, Hex = Ref.getHeaderFromFWM('../../Firmware/debug/HVPM27.fwm')
+    Header, Hex = Ref.getHeaderFromFWM('HVPM_RevE_Prot1_Ver32.fwm')
     if(Ref.verifyHeader(Header)):
         Ref.writeFlash(Hex)
     Ref.resetToMainSection()
@@ -29,6 +29,7 @@ def reflashUnit(serialno = None):
 def main():
     Dev = HVPM.Monsoon()
     serialNumbers = Dev.enumerateDevices()
+    print(serialNumbers)
     for serialno in serialNumbers:
         reflashUnit(serialno)
 

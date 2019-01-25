@@ -13,22 +13,22 @@ def testHVPM(serialno=None,Protocol=pmapi.USB_protocol()):
     HVMON.setVout(3)
     HVengine = sampleEngine.SampleEngine(HVMON)
     #Output to CSV
-    HVengine.enableCSVOutput("HV Main Example.csv")
+    HVengine.enableCSVOutput("HV Main Example " + str(serialno) + ".csv")
     #Turning off periodic console outputs.
     HVengine.ConsoleOutput(True)
 
     #Setting all channels enabled
     HVengine.enableChannel(sampleEngine.channels.MainCurrent)
     HVengine.enableChannel(sampleEngine.channels.MainVoltage)
-    HVengine.enableChannel(sampleEngine.channels.USBCurrent)
-    HVengine.enableChannel(sampleEngine.channels.USBVoltage)
-    HVengine.enableChannel(sampleEngine.channels.AuxCurrent)
+    #HVengine.enableChannel(sampleEngine.channels.USBCurrent)
+    #HVengine.enableChannel(sampleEngine.channels.USBVoltage)
+    #HVengine.enableChannel(sampleEngine.channels.AuxCurrent)
     HVengine.enableChannel(sampleEngine.channels.timeStamp)
     
     #Setting trigger conditions
     numSamples=sampleEngine.triggers.SAMPLECOUNT_INFINITE 
     HVengine.setStartTrigger(sampleEngine.triggers.GREATER_THAN,0) 
-    HVengine.setStopTrigger(sampleEngine.triggers.GREATER_THAN,5) 
+    HVengine.setStopTrigger(sampleEngine.triggers.GREATER_THAN,600)
     HVengine.setTriggerChannel(sampleEngine.channels.timeStamp) 
 
     #Actually start collecting samples
@@ -38,7 +38,7 @@ def testHVPM(serialno=None,Protocol=pmapi.USB_protocol()):
     HVMON.closeDevice();
 
 def main():
-    serialnos = [60000]
+    serialnos = [20125, 20124, 20480, 21000]
     for serial in serialnos:
         p = Process(target=testHVPM,args=(serial,pmapi.USB_protocol()))
         p.start()
