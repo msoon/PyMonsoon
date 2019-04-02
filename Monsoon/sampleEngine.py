@@ -545,7 +545,7 @@ class SampleEngine:
             Sample = self.monsoon.swizzlePacket(buf)
             numSamples = Sample[2]
             if (legacy_timestamp):
-                Sample.append(int(time.time()))
+                Sample.append(time.time())
             else:
                 Sample.append(time.time() - self.__startTime)
             Samples[S] = Sample
