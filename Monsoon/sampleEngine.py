@@ -138,7 +138,7 @@ class SampleEngine:
     def setTriggerChannel(self, triggerChannel):
         """Sets channel that controls the trigger.
         triggerChannel:  selected from sampleEngine.channels"""
-        
+
         self.__triggerChannel = triggerChannel
 
     def ConsoleOutput(self, boolValue):
@@ -439,7 +439,7 @@ class SampleEngine:
         self.__auxCal.addZeroCal(meas[self.__auxFineIndex], False)
         return True
     def __processRefCal(self, meas):
-        """Adds raw measurement data to the refcal tracker        
+        """Adds raw measurement data to the refcal tracker
         meas:  RefCal measurements indexed by the global channel index scheme.
         """
         self.__mainCal.addRefCal(meas[self.__mainCoarseIndex], True)
@@ -451,7 +451,7 @@ class SampleEngine:
         return True
 
     def getSamples(self):
-        """Returns samples in a Python list.  Format is: 
+        """Returns samples in a Python list.  Format is:
         [timestamp, main, usb, aux,mainVolts,usbVolts]."""
         result = self.__arrangeSamples(True)
         return result
@@ -531,7 +531,7 @@ class SampleEngine:
     def __sampleLoop(self, S, Samples, ProcessRate, legacy_timestamp=False):
         """
         Collects and processes samples in batches.  Numpy makes processing large numbers of samples in batches
-        much faster than processing them as they're received.  Useful in avoiding dropped samples.  
+        much faster than processing them as they're received.  Useful in avoiding dropped samples.
         S: The number of samples in the current batch.
         Samples: An array that will be populated with samples.
         ProcessRate: Number of samples per batch.  Should be a power of 2 for best results.
@@ -560,7 +560,7 @@ class SampleEngine:
     def __startSampling(self, samples=5000, granularity=1, legacy_timestamp=False, calTime = 1250):
         """Handle setup for sample collection.
         samples:  Number of samples to collect, independent of the stop trigger.  sampleEngine.triggers.SAMPLECOUNT_INFINITE to function solely through triggers.
-        granularity:  Samples to store.  1 = 1:1, 10 = store 1 out of every 10 samples, etc.  
+        granularity:  Samples to store.  1 = 1:1, 10 = store 1 out of every 10 samples, etc.
         legacy_timestamp: if true, use time.time() for timestamp instead of currentTime - startTime
         """
         self.__Reset()
@@ -597,7 +597,7 @@ class SampleEngine:
     def startSampling(self, samples=5000, granularity = 1, legacy_timestamp=False, calTime = 1250):
         """Handle setup for sample collection.
         samples:  Number of samples to collect, independent of the stop trigger.  sampleEngine.triggers.SAMPLECOUNT_INFINITE to function solely through triggers.
-        granularity:  Samples to store.  1 = 1:1, 10 = store 1 out of every 10 samples, etc.  
+        granularity:  Samples to store.  1 = 1:1, 10 = store 1 out of every 10 samples, etc.
         legacy_timestamp: if true, use time.time() for timestamp instead of currentTime - startTime
         """
         if(self.__errorMode == ErrorHandlingModes.off):
@@ -629,6 +629,9 @@ class SampleEngine:
                     self.disableCSVOutput()
                 raise Exception(e.args)
 
+    def stopSampling(self):
+        """Stop the sample engine from sampling if it is running."""
+        self.__stopTriggerSet = True
 
     def periodicStartSampling(self,calTime=1250):
         """Causes the Power Monitor to enter sample mode, but doesn't actively collect samples.
