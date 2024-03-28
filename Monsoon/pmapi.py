@@ -227,7 +227,7 @@ class CPP_Backend_Protocol(object):
         path = os.path.dirname(path)
         if(platform.system() == "Linux"):
             libLocation=os.path.join(path,"Compiled/Linux/libcpp_backend.so")
-        elif(platform.system() is "Windows"):
+        elif(platform.system() == "Windows"):
             libLocation = os.path.join(path,"Compiled//WIN32//Cpp_backend.dll")
         else:
             raise NotImplementedError("OS not currently supported.")
