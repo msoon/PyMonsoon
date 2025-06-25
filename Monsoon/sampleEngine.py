@@ -14,8 +14,6 @@ import signal
 import sys
 import usb
 import os
-import scipy as sp
-import scipy.stats
 
 class channels:
     timeStamp = 0
